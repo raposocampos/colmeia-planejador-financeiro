@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release GitHub"
+  short_description: "Valida e publica releases no GitHub"
+  default_prompt: "Use $release-github para executar os gates e publicar uma release segura no GitHub."

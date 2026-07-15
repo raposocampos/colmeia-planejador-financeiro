@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend QA"
+  short_description: "Testa fluxos e qualidade da interface"
+  default_prompt: "Use $frontend-qa para validar os fluxos, a responsividade e a acessibilidade da aplicação."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Brand Guardian"
+  short_description: "Valida a identidade visual Colmeia"
+  default_prompt: "Use $brand-guardian para revisar a identidade visual e o contraste da aplicação."
