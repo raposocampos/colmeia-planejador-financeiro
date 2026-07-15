@@ -5,6 +5,12 @@ despesas, orçamentos e metas com clareza e sem linguagem punitiva.
 
 ![Prévia social da Colmeia Educação Financeira](public/og.png)
 
+Versão privada publicada: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
+
+![Dashboard do planejador](docs/quality/screenshots/dashboard-desktop.png)
+
+![Contas em viewport mobile](docs/quality/screenshots/accounts-mobile.png)
+
 ## Funcionalidades
 
 - Onboarding em quatro etapas e demonstração fictícia opcional.
@@ -17,7 +23,7 @@ despesas, orçamentos e metas com clareza e sem linguagem punitiva.
 
 ## Stack
 
-React 19, TypeScript estrito, App Router, Vinext/Vite, Tailwind CSS base, Dexie,
+React 19, TypeScript estrito, App Router, Vinext/Vite, CSS com tokens, Dexie,
 Zod, React Hook Form, Vitest, Testing Library e Playwright.
 
 ## Começar
@@ -52,7 +58,8 @@ de testes, privacidade e limitações estão em docs/.
 ## Publicação
 
 O workflow .github/workflows/pages.yml valida o projeto, gera out/ e publica no
-GitHub Pages. O build padrão também produz o pacote compatível com Sites.
+GitHub Pages assim que o repositório público for conectado. O build padrão também
+produz o pacote compatível com Sites; a versão privada está publicada no link acima.
 
 ## Limitações e roadmap
 

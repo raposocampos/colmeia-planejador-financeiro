@@ -12,3 +12,7 @@
 - Paginação/virtualização não é necessária para o volume esperado do MVP.
 - Trap de foco em modal pode ser refinado; Escape, foco visível e labels existem.
 - Instalação PWA depende do suporte do navegador e de HTTPS na publicação.
+- Os cenários Playwright estão escritos, mas não rodaram neste ambiente por bloqueio
+  da URL local; a validação equivalente foi feita manualmente na URL HTTPS publicada.
+- GitHub Pages depende da criação do repositório público e da autenticação do GitHub
+  CLI, indisponível neste ambiente no momento da entrega.
