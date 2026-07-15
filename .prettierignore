@@ -1,0 +1,10 @@
+node_modules
+dist
+out
+.next
+.wrangler
+coverage
+playwright-report
+test-results
+tmp
+.agents/skills/*/agents/openai.yaml
