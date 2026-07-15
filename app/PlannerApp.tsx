@@ -239,11 +239,15 @@ export default function PlannerApp() {
     demo: boolean;
   }) => {
     const now = new Date().toISOString();
+    if (values.demo) {
+      await loadDemoData();
+    }
     if (values.accountName.trim()) {
       const account: Account = {
-        id: makeId(),
+        id: values.demo ? "demo-account-main" : makeId(),
         name: values.accountName.trim(),
         type: "digital",
+        institution: values.demo ? "Banco fictício" : undefined,
         initialBalanceCents: parseMoney(values.balance),
         color: "#F8BF4D",
         archived: false,
@@ -252,9 +256,7 @@ export default function PlannerApp() {
       };
       await putRecord("accounts", account);
     }
-    if (values.demo) {
-      await loadDemoData();
-    } else {
+    if (!values.demo) {
       await saveSettings({
         ...state.settings,
         onboardingComplete: true,
