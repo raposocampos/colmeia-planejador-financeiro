@@ -6,7 +6,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 
 - [x] TypeScript estrito sem erros.
 - [x] ESLint e Prettier aprovados.
-- [x] Unitários e componentes aprovados: 35 testes em 12 arquivos.
+- [x] Unitários e componentes aprovados: 38 testes em 13 arquivos.
 - [x] E2E aprovado: 15 execuções aprovadas e 1 cenário desktop ignorado no projeto mobile.
 - [x] Console e exceções de página falham automaticamente o E2E.
 - [x] Builds Vinext/Sites e GitHub Pages aprovados localmente.
@@ -41,7 +41,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] GitHub Actions atualizado para os gates da V2.
 - [x] Branch de revisão isolada da `main`.
 - [ ] Merge autorizado por Lucas.
-- [ ] Staging autorizado por Lucas.
+- [x] Preparação de staging autorizada por Lucas em 16/07/2026.
 - [ ] Produção autorizada por Lucas.
 
 ## Evidências
@@ -57,5 +57,5 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - `docs/quality/screenshots/v2/dashboard-migrated.png`
 - `docs/quality/screenshots/v2/profile-privacy.png`
 
-A V2 não foi publicada. As evidências foram capturadas no build local exclusivo de
-revisão, sem credenciais reais e sem alterar o MVP público.
+A V2 não foi publicada em produção. A preparação de staging permanece isolada na
+branch e no GitHub Environment `staging`; o MVP público não foi alterado.

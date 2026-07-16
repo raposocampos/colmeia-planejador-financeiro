@@ -6,7 +6,7 @@ Branch: `feat/auth-cloud-sync-onboarding-v2`
 
 Pull Request: https://github.com/raposocampos/colmeia-planejador-financeiro/pull/3
 
-Estado: **não publicada; merge, staging e produção bloqueados**
+Estado: **preparação de staging autorizada; merge e produção bloqueados**
 
 ## Ajuste solicitado após a primeira revisão
 
@@ -156,7 +156,7 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 - Baseline: typecheck, lint, 16 testes e dois builds passaram; formato e E2E tinham
   falhas preexistentes registradas em `docs/quality/baseline-auth-cloud-sync-v2.md`.
-- V2: 35 testes unitários/componentes, 15 execuções E2E aprovadas e 1 skip
+- V2: 38 testes unitários/componentes, 15 execuções E2E aprovadas e 1 skip
   intencional do cenário exclusivo de sidebar desktop no projeto mobile.
 - Typecheck, lint, formato, migrações/RLS, segredos e os dois builds foram aprovados.
 - A auditoria não encontrou vulnerabilidades altas ou críticas; permanece um aviso
@@ -172,12 +172,16 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 - [x] Aprovo o fluxo de migração
 - [x] Aprovo o comportamento de manter conectado
 - [x] Aprovo as páginas de privacidade e termos
-- [ ] Autorizo preparar staging
+- [x] Autorizo preparar staging
 - [ ] Autorizo publicar em produção
 
-Registro: em 16/07/2026, Lucas Campos respondeu literalmente `APROVADO` após as
-duas revisões da sidebar e das evidências visuais. A aprovação encerra a revisão
-da V2 nesta branch, mas não autoriza merge, staging ou produção.
+Registro de revisão: em 16/07/2026, Lucas Campos respondeu literalmente `APROVADO`
+após as duas revisões da sidebar e das evidências visuais.
 
-Marcar os dois últimos itens exige uma tarefa futura e autorização explícita; este
-documento não autoriza merge nem deploy por si só.
+Registro de staging: em 16/07/2026, Lucas Campos declarou literalmente
+`Autorizo preparar o ambiente de staging da V2, sem merge e sem publicação em
+produção.` A autorização cobre a infraestrutura e os testes de staging isolados,
+mas não autoriza merge nem qualquer alteração no site público atual.
+
+Publicação em produção continua exigindo tarefa futura e autorização explícita;
+este documento não autoriza merge nem deploy de produção por si só.

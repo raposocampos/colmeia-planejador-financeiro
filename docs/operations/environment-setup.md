@@ -13,13 +13,32 @@ segredos e dependências. Integração Supabase usa banco local isolado quando d
 
 ## Staging
 
-Projeto separado, dados fictícios, SMTP e OAuth próprios, URLs autorizadas e RLS
-validada com dois usuários. Não foi criado nem publicado nesta tarefa.
+Preparação autorizada em 16/07/2026, sem merge e sem produção. O GitHub Environment
+`staging` e o workflow manual `staging-v2.yml` isolam credenciais, dry-run, migrations,
+testes A/B/anônimo e o artefato. O ambiente aceita somente a branch
+`feat/auth-cloud-sync-onboarding-v2`; o workflow não contém etapa de deploy.
+
+Variáveis do GitHub Environment:
+
+- `SUPABASE_PROJECT_ID`: referência do projeto exclusivo de staging;
+- `NEXT_PUBLIC_SUPABASE_URL`: URL HTTPS do mesmo projeto;
+- `NEXT_PUBLIC_SITE_URL`: URL HTTPS que contenha `staging` e nunca a URL pública atual.
+
+Secrets do GitHub Environment:
+
+- `SUPABASE_ACCESS_TOKEN` e `SUPABASE_DB_PASSWORD`: usados somente pela CLI;
+- `SUPABASE_SERVICE_ROLE_KEY`: usada somente pelo teste administrativo descartável;
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: única chave enviada ao bundle do navegador.
+
+O projeto Supabase, SMTP e OAuth devem ser próprios de staging. Os testes criam
+usuários e dados fictícios temporários, verificam isolamento, cascata e idempotência
+e removem as contas ao final. Nenhuma credencial deve ser enviada pelo chat.
 
 ## Production
 
 Projeto e segredos separados, domínio final, revisão jurídica, monitoramento, backup,
-orçamento de cotas e gate manual. Não foi alterado nesta tarefa.
+orçamento de cotas e gate manual. O Sites público e o GitHub Pages não são alvos do
+workflow de staging e não foram alterados.
 
 Variáveis públicas permitidas: `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `NEXT_PUBLIC_SITE_URL`. Credenciais administrativas

@@ -8,7 +8,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 | `pnpm typecheck`                 | aprovado; TypeScript sem erros                                                 |
 | `pnpm lint`                      | aprovado; ESLint sem erros                                                     |
 | `pnpm format:check`              | aprovado; Prettier sem divergências                                            |
-| `pnpm test`                      | aprovado; 35 testes em 12 arquivos                                             |
+| `pnpm test`                      | aprovado; 38 testes em 13 arquivos                                             |
 | `pnpm test:e2e`                  | aprovado; 15 execuções, 1 skip desktop-only no mobile e nenhum erro de console |
 | `pnpm build`                     | aprovado; build Vinext concluído                                               |
 | `pnpm build:pages`               | aprovado; 6 rotas estáticas e not-found geradas                                |
@@ -48,3 +48,25 @@ mobile continua usando o menu fixo, e a impressão permanece sem a faixa estrutu
   revisados.
 - `colmeia-release-approval` e `release-github`: release mantida bloqueada; somente
   branch e PR de revisão são permitidos antes de `APROVADO`.
+
+## Preparação de staging após aprovação
+
+Em 16/07/2026, Lucas autorizou explicitamente preparar staging sem merge e sem
+produção. A preparação adicionou:
+
+- GitHub Environment `staging`, sem credenciais e restrito à branch V2;
+- Supabase CLI `2.109.1` fixada no lockfile;
+- workflow manual que exige `STAGING`, executa dry-run antes de qualquer migration
+  e não possui ação de deploy;
+- bloqueio das URLs conhecidas de produção e exigência de host identificado como
+  staging;
+- teste remoto descartável de RLS A/B/anônimo, ownership, cascata e migração
+  idempotente;
+- build guardado somente como artefato por sete dias.
+
+Após essas mudanças, instalação congelada com pnpm 11.7.0, typecheck, lint, formato,
+38 testes, 15 execuções E2E, verificação SQL, varredura de 146 arquivos, auditoria,
+build Vinext, build Pages e `git diff --check` passaram. A validação da configuração
+foi exercitada com valores fictícios sem rede. O teste remoto não foi executado
+porque o projeto e as credenciais de staging ainda não existem; produção, Sites,
+Pages e `main` permaneceram intocados.

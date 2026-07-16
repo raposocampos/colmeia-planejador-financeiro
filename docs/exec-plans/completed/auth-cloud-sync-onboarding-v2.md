@@ -17,6 +17,9 @@ Concluído em 16/07/2026. Produção bloqueada até aprovação explícita.
 - [x] Executar auditorias de marca, segurança, migração e release.
 - [x] Gerar screenshots e documento de aprovação.
 - [x] Abrir PR de revisão sem merge e solicitar `APROVADO`.
+- [x] Registrar a aprovação explícita da preparação de staging.
+- [x] Criar GitHub Environment `staging` restrito à branch V2.
+- [x] Preparar workflow manual com dry-run, migrations, testes remotos e artefato.
 
 PR em rascunho: https://github.com/raposocampos/colmeia-planejador-financeiro/pull/3
 
@@ -30,6 +33,8 @@ PR em rascunho: https://github.com/raposocampos/colmeia-planejador-financeiro/pu
 
 ## Bloqueios externos
 
-Configuração real de projeto Supabase, SMTP, Google OAuth, URLs autorizadas e
-revisão jurídica pertencem a staging/produção e não foram inventadas nesta branch.
-Merge, staging e produção permanecem bloqueados até autorização explícita de Lucas.
+A preparação de staging foi autorizada em 16/07/2026. A execução remota aguarda um
+projeto Supabase exclusivo e o cadastro seguro das variáveis/secrets do ambiente;
+SMTP, Google OAuth e callbacks também precisam ser exclusivos. Nenhuma credencial
+foi inventada ou solicitada por mensagem. Merge e produção permanecem bloqueados
+até nova autorização explícita de Lucas.

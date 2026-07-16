@@ -2,10 +2,23 @@
 
 ## Gate obrigatório
 
+**Preparação de staging autorizada por Lucas Campos em: 16/07/2026**
+
 **Produção autorizada por Lucas Campos em: ____**
 
-Sem data, identificação da aprovação e checklist revisado, pare. A branch atual não
-autoriza merge, staging ou produção.
+Sem data, identificação da aprovação e checklist revisado para o ambiente pretendido,
+pare. A autorização de staging não autoriza merge nem produção.
+
+## Preparação de staging autorizada
+
+1. Usar somente o GitHub Environment `staging` e um projeto Supabase exclusivo.
+2. Configurar credenciais fora do repositório e executar o workflow manual com a
+   confirmação literal `STAGING`.
+3. Rodar primeiro com `apply_migrations=false` para validar configuração e dry-run.
+4. Revisar o dry-run; somente então repetir com `apply_migrations=true`.
+5. Exigir isolamento A/B/anônimo, cascata e migração idempotente aprovados.
+6. Gerar artefato por sete dias sem chamar Sites, Pages ou qualquer deploy.
+7. Manter `main`, o Sites público e o ambiente `github-pages` intocados.
 
 ## Pré-publicação futura
 
@@ -19,4 +32,4 @@ autoriza merge, staging ou produção.
 7. Publicar primeiro em staging autorizado; executar QA desktop/mobile e migração.
 8. Aprovar janela, backup e rollback antes de produção.
 
-Esta tarefa não executa nenhum passo de publicação.
+Nenhum passo desta preparação publica em produção.
