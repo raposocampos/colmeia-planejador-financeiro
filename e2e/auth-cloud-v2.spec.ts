@@ -133,7 +133,7 @@ test("layout de autenticação e painel funciona no viewport do projeto", async 
   await expect(page.getByText("Perfil e sessão")).toBeVisible();
 });
 
-test("sidebar cobre toda a altura do documento em todas as abas desktop", async ({
+test("sidebar e informações finais acompanham todas as abas desktop", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "sidebar desktop não existe no mobile");
@@ -155,15 +155,23 @@ test("sidebar cobre toda a altura do documento em todas as abas desktop", async 
       const shell = document.querySelector<HTMLElement>(".app-shell");
       const main = document.querySelector<HTMLElement>(".app-main");
       const sidebar = document.querySelector<HTMLElement>(".sidebar");
-      if (!shell || !main || !sidebar) throw new Error("layout principal ausente");
+      const primary = document.querySelector<HTMLElement>(".sidebar-primary");
+      const footer = document.querySelector<HTMLElement>(".sidebar footer");
+      if (!shell || !main || !sidebar || !primary || !footer)
+        throw new Error("layout principal ausente");
       const shellStyle = getComputedStyle(shell);
       const sidebarStyle = getComputedStyle(sidebar);
+      const sidebarRect = sidebar.getBoundingClientRect();
+      const footerRect = footer.getBoundingClientRect();
       return {
         shellHeight: shell.scrollHeight,
         mainHeight: main.scrollHeight,
+        sidebarHeight: sidebarRect.height,
+        footerBottomGap: sidebarRect.bottom - footerRect.bottom,
         backgroundImage: shellStyle.backgroundImage,
         sidebarPosition: sidebarStyle.position,
         sidebarBottom: sidebarStyle.bottom,
+        primaryPosition: getComputedStyle(primary).position,
       };
     });
 
@@ -174,7 +182,15 @@ test("sidebar cobre toda a altura do documento em todas as abas desktop", async 
     expect(layout.backgroundImage, `${tab}: faixa lateral ausente`).toContain(
       "linear-gradient",
     );
-    expect(layout.sidebarPosition).toBe("fixed");
+    expect(
+      Math.abs(layout.sidebarHeight - layout.shellHeight),
+      `${tab}: sidebar não acompanha a altura do documento`,
+    ).toBeLessThanOrEqual(1);
+    expect(layout.footerBottomGap, `${tab}: informações fora do rodapé`).toBeLessThan(
+      40,
+    );
+    expect(layout.sidebarPosition).toBe("absolute");
     expect(layout.sidebarBottom).toBe("0px");
+    expect(layout.primaryPosition).toBe("sticky");
   }
 });

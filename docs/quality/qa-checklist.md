@@ -34,6 +34,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] Contraste, foco, labels, teclado e reduced motion verificados.
 - [x] Gráficos possuem alternativa textual.
 - [x] Sidebar e faixa escura cobrem toda a altura nas sete abas desktop.
+- [x] Bloco de privacidade e rodapé ficam no final real da sidebar em todas as abas.
 
 ## Release
 

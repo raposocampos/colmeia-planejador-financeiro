@@ -1832,34 +1832,36 @@ export default function PlannerApp({
         Pular para o conteúdo
       </a>
       <aside className={"sidebar" + (sidebarOpen ? " sidebar--open" : "")}>
-        <div className="sidebar-brand">
-          <BrandMark inverse />
-          <button
-            className="sidebar-close"
-            type="button"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Fechar menu"
-          >
-            <X size={20} />
-          </button>
+        <div className="sidebar-primary">
+          <div className="sidebar-brand">
+            <BrandMark inverse />
+            <button
+              className="sidebar-close"
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Fechar menu"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <nav aria-label="Navegação principal">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={activeNav === item.id ? "active" : ""}
+                  onClick={() => goTo(item.id)}
+                  aria-current={activeNav === item.id ? "page" : undefined}
+                >
+                  <Icon size={19} strokeWidth={1.9} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
         </div>
-        <nav aria-label="Navegação principal">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={activeNav === item.id ? "active" : ""}
-                onClick={() => goTo(item.id)}
-                aria-current={activeNav === item.id ? "page" : undefined}
-              >
-                <Icon size={19} strokeWidth={1.9} />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
         <div className="sidebar-tip">
           <span className="tip-hex">
             <ShieldCheck size={20} />

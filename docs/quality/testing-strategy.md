@@ -6,7 +6,8 @@ Testes unitários cobrem normalização de e-mail, senha, sessão, detecção e 
 do legado, idempotência, referências, painel vazio e cache separado. Componentes
 cobrem login, cadastro, confirmação simulada, foco, onboarding em memória e conflito
 de migração. Playwright usa build estático local de revisão, sem credenciais, para
-14 execuções em desktop/mobile. A migration SQL tem verificação de RLS, policies,
+15 execuções aprovadas em desktop/mobile e um skip exclusivo do layout desktop no
+projeto mobile. A migration SQL tem verificação de RLS, policies,
 índices, dono por sessão e RPCs; integração real permanece gate de staging.
 
 `NEXT_PUBLIC_REVIEW_MODE=true` aparece somente no `build:review` local e nunca deve

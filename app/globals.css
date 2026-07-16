@@ -323,6 +323,7 @@ textarea {
 }
 
 .app-shell {
+  position: relative;
   min-height: 100vh;
   background: linear-gradient(
     to right,
@@ -334,7 +335,7 @@ textarea {
 }
 
 .sidebar {
-  position: fixed;
+  position: absolute;
   inset: 0 auto 0 0;
   z-index: 40;
   display: flex;
@@ -351,6 +352,12 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 0 0.35rem 1.75rem;
+}
+
+.sidebar-primary {
+  position: sticky;
+  top: 1.55rem;
+  z-index: 1;
 }
 
 .sidebar-close {
@@ -2011,8 +2018,13 @@ td {
   }
 
   .sidebar {
+    position: fixed;
     transform: translateX(-105%);
     transition: transform 220ms ease;
+  }
+
+  .sidebar-primary {
+    position: static;
   }
 
   .sidebar--open {

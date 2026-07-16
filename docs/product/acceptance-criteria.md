@@ -5,6 +5,7 @@
 - Avançar, voltar, pular e finalizar funcionam.
 - Dados demonstrativos são opcionais, identificados e removíveis.
 - Sidebar no desktop e barra compacta no celular alcançam todas as seções.
+- Informações auxiliares da sidebar ficam no rodapé real da página em todas as abas.
 
 ## Dados financeiros
 

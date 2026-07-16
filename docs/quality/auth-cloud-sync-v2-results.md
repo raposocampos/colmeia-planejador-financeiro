@@ -30,10 +30,11 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 ## Ajuste após a primeira revisão visual
 
 Após o feedback de Lucas, o shell desktop passou a pintar a faixa lateral escura
-por toda a altura do documento. A sidebar continua fixa, enquanto o fundo estrutural
-evita o corte em páginas maiores que a viewport. Um cenário Playwright percorre as
-sete abas, verifica a altura do shell, a faixa lateral e o posicionamento fixo. O
-comportamento mobile e a impressão permanecem sem a faixa estrutural.
+por toda a altura do documento. Na segunda revisão, a sidebar passou a acompanhar
+a altura real de cada aba; assim, o bloco de privacidade e o rodapé são posicionados
+no final da página, em vez de ficarem no meio de documentos longos. Um cenário
+Playwright percorre as sete abas e compara shell, sidebar e rodapé. O comportamento
+mobile continua usando o menu fixo, e a impressão permanece sem a faixa estrutural.
 
 ## Auditorias aplicadas
 

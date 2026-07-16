@@ -21,6 +21,11 @@ Evidências atualizadas:
 - [Dashboard com sidebar até o final](../quality/screenshots/v2/dashboard-empty.png)
 - [Configurações com sidebar até o final](../quality/screenshots/v2/profile-privacy.png)
 
+Na segunda revisão, Lucas apontou que o bloco “Sincronizado com privacidade” ainda
+parecia solto no meio das páginas longas. A sidebar agora acompanha a altura real
+de cada aba e mantém esse bloco, a versão e o estado de sincronização no rodapé do
+documento. O menu móvel continua fixo somente quando aberto.
+
 ## 1. Resumo das alterações
 
 A V2 adiciona autenticação Supabase por e-mail/senha, confirmação obrigatória,
