@@ -8,6 +8,7 @@ self.addEventListener("install", (event) => {
       .then((cache) =>
         cache.addAll([
           root,
+          new URL("favicon.svg", root).href,
           new URL("manifest.webmanifest", root).href,
           new URL("og.png", root).href,
         ]),

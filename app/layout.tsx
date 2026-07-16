@@ -15,6 +15,28 @@ export const metadata: Metadata = {
     "Planejador financeiro local-first para organizar contas, gastos, orçamentos e metas com clareza.",
   applicationName: "Colmeia Educação Financeira",
   manifest: basePath + "/manifest.webmanifest",
+  icons: {
+    icon: [
+      {
+        url: basePath + "/favicon.svg",
+        type: "image/svg+xml",
+        sizes: "any",
+      },
+      {
+        url: basePath + "/icon-192.png",
+        type: "image/png",
+        sizes: "192x192",
+      },
+    ],
+    shortcut: basePath + "/favicon.svg",
+    apple: [
+      {
+        url: basePath + "/icon-192.png",
+        type: "image/png",
+        sizes: "192x192",
+      },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
