@@ -1,6 +1,8 @@
 name: Prepare V2 staging
 
 on:
+  pull_request:
+    types: [labeled]
   workflow_dispatch:
     inputs:
       confirmation:
@@ -22,12 +24,22 @@ concurrency:
 
 jobs:
   guard:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'staging-dry-run' ||
+      github.event.label.name == 'staging-apply'
     runs-on: ubuntu-latest
     steps:
       - name: Require the isolated staging confirmation
         env:
           STAGING_CONFIRMATION: ${{ inputs.confirmation }}
-        run: test "$STAGING_CONFIRMATION" = "STAGING"
+          STAGING_LABEL: ${{ github.event.label.name }}
+        run: >-
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            test "$STAGING_CONFIRMATION" = "STAGING";
+          else
+            test "$STAGING_LABEL" = "staging-dry-run" -o "$STAGING_LABEL" = "staging-apply";
+          fi
 
   quality:
     needs: guard
@@ -96,7 +108,7 @@ jobs:
           --dry-run
           --password "$SUPABASE_DB_PASSWORD"
       - name: Apply database changes to staging
-        if: inputs.apply_migrations
+        if: inputs.apply_migrations || github.event.label.name == 'staging-apply'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -106,7 +118,7 @@ jobs:
           --password "$SUPABASE_DB_PASSWORD"
           --yes
       - name: Verify real RLS and legacy migration
-        if: inputs.apply_migrations
+        if: inputs.apply_migrations || github.event.label.name == 'staging-apply'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

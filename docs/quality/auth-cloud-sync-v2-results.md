@@ -56,8 +56,8 @@ produção. A preparação adicionou:
 
 - GitHub Environment `staging`, sem credenciais e restrito à branch V2;
 - Supabase CLI `2.109.1` fixada no lockfile;
-- workflow manual que exige `STAGING`, executa dry-run antes de qualquer migration
-  e não possui ação de deploy;
+- workflow acionável no PR pelas labels `staging-dry-run` e `staging-apply`, além do
+  gate manual `STAGING`; sempre executa dry-run antes da migration e não faz deploy;
 - bloqueio das URLs conhecidas de produção e exigência de host identificado como
   staging;
 - teste remoto descartável de RLS A/B/anônimo, ownership, cascata e migração

@@ -6,21 +6,21 @@ Escopo autorizado: preparar staging isolado, sem merge e sem publicação em pro
 
 ## Estado
 
-| Item                                      | Estado                                          |
-| ----------------------------------------- | ----------------------------------------------- |
-| Branch V2 separada da `main`              | pronto                                          |
-| GitHub Environment `staging`              | preparado sem credenciais; restrito à branch V2 |
-| Workflow manual e confirmação `STAGING`   | pronto                                          |
-| Supabase CLI fixada em `2.109.1`          | pronto                                          |
-| Validação contra URLs de produção         | pronto                                          |
-| Dry-run antes de migrations               | pronto                                          |
-| Teste real de RLS A/B/anônimo e cascata   | pronto para executar                            |
-| Teste real de migração idempotente        | pronto para executar                            |
-| Build armazenado como artefato por 7 dias | pronto para executar                            |
-| Projeto Supabase exclusivo                | aguarda criação/autenticação                    |
-| Secrets e variáveis de staging            | aguardam configuração segura                    |
-| URL hospedada de staging                  | não publicada                                   |
-| Merge e produção                          | bloqueados                                      |
+| Item                                       | Estado                                          |
+| ------------------------------------------ | ----------------------------------------------- |
+| Branch V2 separada da `main`               | pronto                                          |
+| GitHub Environment `staging`               | preparado sem credenciais; restrito à branch V2 |
+| Gate por labels no PR e confirmação manual | pronto                                          |
+| Supabase CLI fixada em `2.109.1`           | pronto                                          |
+| Validação contra URLs de produção          | pronto                                          |
+| Dry-run antes de migrations                | pronto                                          |
+| Teste real de RLS A/B/anônimo e cascata    | pronto para executar                            |
+| Teste real de migração idempotente         | pronto para executar                            |
+| Build armazenado como artefato por 7 dias  | pronto para executar                            |
+| Projeto Supabase exclusivo                 | aguarda criação/autenticação                    |
+| Secrets e variáveis de staging             | aguardam configuração segura                    |
+| URL hospedada de staging                   | não publicada                                   |
+| Merge e produção                           | bloqueados                                      |
 
 ## Como desbloquear a execução remota
 
@@ -30,10 +30,13 @@ Escopo autorizado: preparar staging isolado, sem merge e sem publicação em pro
 3. No GitHub, abrir **Settings → Environments → staging** e cadastrar as variáveis e
    secrets descritas em `environment-setup.md`. Não copiar credenciais para issues,
    PRs, commits, logs ou mensagens.
-4. Executar **Prepare V2 staging** primeiro com `confirmation=STAGING` e
-   `apply_migrations=false`.
-5. Revisar o dry-run e repetir com `apply_migrations=true` para aplicar o schema e
-   executar os testes reais.
+4. No PR #3, aplicar `staging-dry-run`, aguardar o workflow **Prepare V2 staging** e
+   revisar o dry-run. Remover a label ao final.
+5. Aplicar `staging-apply` somente após o dry-run aprovado. Essa segunda execução
+   aplica o schema e roda os testes reais; remover a label ao final.
+
+Enquanto o workflow não está na branch padrão, `workflow_dispatch` não aparece na
+interface. As labels permitem executar o mesmo pipeline no PR sem merge.
 
 O workflow gera somente um artefato técnico. Hospedagem de staging exige uma URL
 separada que contenha `staging`; o projeto Sites público atual e o GitHub Pages não

@@ -12,13 +12,16 @@ pare. A autorização de staging não autoriza merge nem produção.
 ## Preparação de staging autorizada
 
 1. Usar somente o GitHub Environment `staging` e um projeto Supabase exclusivo.
-2. Configurar credenciais fora do repositório e executar o workflow manual com a
-   confirmação literal `STAGING`.
-3. Rodar primeiro com `apply_migrations=false` para validar configuração e dry-run.
-4. Revisar o dry-run; somente então repetir com `apply_migrations=true`.
+2. Configurar credenciais fora do repositório e aplicar a label `staging-dry-run` no
+   PR para validar configuração e dry-run sem merge.
+3. Revisar a execução e remover essa label.
+4. Aplicar `staging-apply` somente após o dry-run aprovado; essa label aplica a
+   migration e executa os testes remotos. Removê-la ao final.
 5. Exigir isolamento A/B/anônimo, cascata e migração idempotente aprovados.
 6. Gerar artefato por sete dias sem chamar Sites, Pages ou qualquer deploy.
-7. Manter `main`, o Sites público e o ambiente `github-pages` intocados.
+7. A alternativa `workflow_dispatch` exige a confirmação literal `STAGING`, mas só
+   fica disponível se o workflow existir na branch padrão.
+8. Manter `main`, o Sites público e o ambiente `github-pages` intocados.
 
 ## Pré-publicação futura
 

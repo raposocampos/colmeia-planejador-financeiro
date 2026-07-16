@@ -19,7 +19,7 @@ Concluído em 16/07/2026. Produção bloqueada até aprovação explícita.
 - [x] Abrir PR de revisão sem merge e solicitar `APROVADO`.
 - [x] Registrar a aprovação explícita da preparação de staging.
 - [x] Criar GitHub Environment `staging` restrito à branch V2.
-- [x] Preparar workflow manual com dry-run, migrations, testes remotos e artefato.
+- [x] Preparar workflow com gate por label/manual, migrations, testes e artefato.
 
 PR em rascunho: https://github.com/raposocampos/colmeia-planejador-financeiro/pull/3
 

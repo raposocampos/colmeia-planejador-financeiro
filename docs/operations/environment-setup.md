@@ -14,8 +14,9 @@ segredos e dependências. Integração Supabase usa banco local isolado quando d
 ## Staging
 
 Preparação autorizada em 16/07/2026, sem merge e sem produção. O GitHub Environment
-`staging` e o workflow manual `staging-v2.yml` isolam credenciais, dry-run, migrations,
-testes A/B/anônimo e o artefato. O ambiente aceita somente a branch
+`staging` e o workflow `staging-v2.yml` isolam credenciais, dry-run, migrations,
+testes A/B/anônimo e o artefato. Antes do merge, as labels `staging-dry-run` e
+`staging-apply` controlam as duas fases no PR. O ambiente aceita somente a branch
 `feat/auth-cloud-sync-onboarding-v2`; o workflow não contém etapa de deploy.
 
 Variáveis do GitHub Environment:
