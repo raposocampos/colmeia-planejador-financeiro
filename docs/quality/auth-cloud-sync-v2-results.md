@@ -89,3 +89,27 @@ A/B, bloqueio anônimo, ownership, cascata e migração idempotente. Os três us
 fictícios foram removidos. Um artefato de 34 arquivos foi guardado por sete dias,
 sem deploy. A URL `.invalid` usada no build é deliberadamente não roteável e deve
 ser substituída antes do QA hospedado.
+
+## QA hospedado em staging
+
+O host foi publicado no repositório separado
+`raposocampos/colmeia-planejador-financeiro-staging`, sem merge da PR V2 e sem
+alterar o Sites público. O
+[run 29537395850](https://github.com/raposocampos/colmeia-planejador-financeiro-staging/actions/runs/29537395850)
+aprovou instalação congelada, typecheck, lint, formato, 38 testes, schema/RLS,
+segredos, auditoria, E2E, build Pages e deploy.
+
+A URL `https://raposocampos.github.io/colmeia-planejador-financeiro-staging/`
+carregou a tela de login com assets e chave pública do Supabase, sem erros de
+console. Em 390 × 844, `scrollWidth` permaneceu igual a 390 e o formulário ficou
+completo. O Supabase Auth foi configurado com a Site URL do staging e callbacks
+explícitos para confirmação e recuperação.
+
+Evidências:
+
+- [login hospedado desktop](screenshots/staging-v2-login-desktop.png);
+- [login hospedado mobile](screenshots/staging-v2-login-mobile.png).
+
+SMTP próprio e Google OAuth não foram ativados por ausência de credenciais próprias.
+O teste de entrega de e-mail, confirmação real e recuperação permanece pendente de
+um endereço de teste autorizado. Merge e produção continuam bloqueados.

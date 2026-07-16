@@ -26,10 +26,12 @@ Variáveis do GitHub Environment:
 - `NEXT_PUBLIC_SUPABASE_URL`: URL HTTPS do mesmo projeto;
 - `NEXT_PUBLIC_SITE_URL`: URL HTTPS que contenha `staging` e nunca a URL pública atual.
 
-Enquanto houver somente artefato técnico e nenhum host navegável, é permitido usar
-`https://colmeia-v2-staging.invalid`. O domínio `.invalid` é deliberadamente não
-roteável: não representa um deploy e precisa ser substituído, junto das URLs do
-Supabase Auth, antes de testar cadastro, confirmação, OAuth ou recuperação hospedados.
+O host navegável autorizado usa o repositório separado
+`raposocampos/colmeia-planejador-financeiro-staging` e a URL
+`https://raposocampos.github.io/colmeia-planejador-financeiro-staging/`. O domínio
+`.invalid` foi usado somente durante o dry-run histórico e não é mais a URL ativa.
+No Supabase Auth, a Site URL aponta para esse host e a allow list contém apenas as
+rotas `/auth/callback/` e `/auth/reset-password/` do mesmo domínio.
 
 Secrets do GitHub Environment:
 
@@ -37,15 +39,16 @@ Secrets do GitHub Environment:
 - `SUPABASE_SERVICE_ROLE_KEY`: usada somente pelo teste administrativo descartável;
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: única chave enviada ao bundle do navegador.
 
-O projeto Supabase, SMTP e OAuth devem ser próprios de staging. Os testes criam
+O projeto Supabase, SMTP e OAuth devem ser próprios de staging. SMTP próprio e
+Google OAuth ainda aguardam credenciais exclusivas. Os testes criam
 usuários e dados fictícios temporários, verificam isolamento, cascata e idempotência
 e removem as contas ao final. Nenhuma credencial deve ser enviada pelo chat.
 
 ## Production
 
 Projeto e segredos separados, domínio final, revisão jurídica, monitoramento, backup,
-orçamento de cotas e gate manual. O Sites público e o GitHub Pages não são alvos do
-workflow de staging e não foram alterados.
+orçamento de cotas e gate manual. O Sites público e a branch `main` do repositório
+principal não são alvos do workflow de staging e não foram alterados.
 
 Variáveis públicas permitidas: `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `NEXT_PUBLIC_SITE_URL`. Credenciais administrativas

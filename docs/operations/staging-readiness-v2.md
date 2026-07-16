@@ -20,7 +20,7 @@ Escopo autorizado: preparar staging isolado, sem merge e sem publicação em pro
 | Projeto Supabase exclusivo                 | criado em `ca-central-1`                             |
 | Secrets e variáveis de staging             | configurados fora do repositório                     |
 | Migration remota V2                        | aplicada somente no projeto de staging               |
-| URL hospedada de staging                   | não publicada                                        |
+| URL hospedada de staging                   | aprovada em repositório GitHub Pages separado        |
 | Merge e produção                           | bloqueados                                           |
 
 ## Execução remota concluída
@@ -30,10 +30,10 @@ de e-mail permanece obrigatória, o provedor de e-mail está ativo e os demais
 provedores permanecem desativados até existirem credenciais próprias de staging.
 
 O GitHub Environment guarda quatro secrets e três variáveis sem expor valores no
-repositório. Como ainda não existe hospedagem de staging, `NEXT_PUBLIC_SITE_URL` usa
-temporariamente o domínio reservado e não roteável
-`https://colmeia-v2-staging.invalid`. Esse valor serve somente para validar e gerar
-o artefato; deve ser substituído antes de qualquer teste de autenticação hospedado.
+repositório. O host navegável foi isolado no repositório público
+`raposocampos/colmeia-planejador-financeiro-staging`, com somente a chave pública do
+Supabase no bundle. O projeto Sites público, o repositório principal e a branch
+`main` de produção não foram alterados.
 
 O dry-run aprovado listou exclusivamente
 `202607160001_auth_cloud_sync_v2.sql`. A execução seguinte aplicou essa migration e
@@ -45,16 +45,19 @@ Evidências do GitHub Actions:
 
 - [dry-run aprovado](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591);
 - [migration e testes integrados aprovados](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535426194);
+- [quality gates e deploy do host isolado aprovados](https://github.com/raposocampos/colmeia-planejador-financeiro-staging/actions/runs/29537395850);
 - artefato técnico `colmeia-v2-staging-8bf634f407208ac8a90611e46ab170c9cd87faa2`,
   retido por sete dias e sem deploy.
 
 Enquanto o workflow não está na branch padrão, `workflow_dispatch` não aparece na
 interface. As labels permitem executar o mesmo pipeline no PR sem merge.
 
-O workflow gera somente um artefato técnico. Hospedagem de staging exige uma URL
-separada que contenha `staging`; o projeto Sites público atual e o GitHub Pages não
-podem ser reutilizados para esse fim. SMTP próprio, Google OAuth e callbacks reais
-também permanecem pendentes até essa URL existir.
+O workflow do repositório principal continua gerando somente um artefato técnico.
+O repositório de host separado publica
+`https://raposocampos.github.io/colmeia-planejador-financeiro-staging/`. O Supabase
+Auth usa essa URL como Site URL e permite somente `/auth/callback/` e
+`/auth/reset-password/`. SMTP próprio e Google OAuth permanecem pendentes até
+existirem credenciais exclusivas de staging.
 
 ## Evidência esperada
 
@@ -63,4 +66,5 @@ também permanecem pendentes até essa URL existir.
 - script registra somente a aprovação dos cenários, sem e-mails, tokens ou valores;
 - três usuários temporários são removidos mesmo em falha;
 - artefato `colmeia-v2-staging-<sha>` disponível por sete dias;
-- nenhuma execução de deploy presente no workflow.
+- nenhum deploy no workflow do repositório principal e nenhum uso do host de produção;
+- deploy de staging limitado ao repositório `colmeia-planejador-financeiro-staging`.
