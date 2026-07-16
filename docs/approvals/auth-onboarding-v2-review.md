@@ -166,14 +166,18 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 ## 11. Checklist de aprovação
 
-- [ ] Aprovo o layout da tela de login
-- [ ] Aprovo o layout do cadastro
-- [ ] Aprovo os textos do onboarding
-- [ ] Aprovo o fluxo de migração
-- [ ] Aprovo o comportamento de manter conectado
-- [ ] Aprovo as páginas de privacidade e termos
+- [x] Aprovo o layout da tela de login
+- [x] Aprovo o layout do cadastro
+- [x] Aprovo os textos do onboarding
+- [x] Aprovo o fluxo de migração
+- [x] Aprovo o comportamento de manter conectado
+- [x] Aprovo as páginas de privacidade e termos
 - [ ] Autorizo preparar staging
 - [ ] Autorizo publicar em produção
+
+Registro: em 16/07/2026, Lucas Campos respondeu literalmente `APROVADO` após as
+duas revisões da sidebar e das evidências visuais. A aprovação encerra a revisão
+da V2 nesta branch, mas não autoriza merge, staging ou produção.
 
 Marcar os dois últimos itens exige uma tarefa futura e autorização explícita; este
 documento não autoriza merge nem deploy por si só.
