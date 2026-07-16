@@ -9,6 +9,7 @@ import { defaultCategories } from "./lib/demo";
 import { configurePlannerRepository } from "./lib/plannerGateway";
 import { MemoryPlannerRepository } from "./lib/repositories/memory";
 import { emptyState, type PlannerState } from "./lib/types";
+import type { NavKey } from "./lib/types";
 import type { AppUserProfile } from "./lib/profile";
 
 const profile: AppUserProfile = {
@@ -19,6 +20,15 @@ const profile: AppUserProfile = {
   providers: ["email", "google"],
   createdAt: "2026-07-16T12:00:00.000Z",
   onboardingCompletedAt: "2026-07-16T12:10:00.000Z",
+};
+
+const reviewNav: Partial<Record<string, NavKey>> = {
+  empty: "dashboard",
+  migrated: "dashboard",
+  transactions: "transactions",
+  accounts: "accounts",
+  budgets: "budgets",
+  settings: "settings",
 };
 
 const migratedState = (): PlannerState => {
@@ -37,7 +47,36 @@ const migratedState = (): PlannerState => {
       updatedAt: now,
     },
   ];
+  state.cards = [
+    {
+      id: "review-card",
+      name: "Cartão Colmeia",
+      limitCents: 420000,
+      closingDay: 18,
+      dueDay: 25,
+      paymentAccountId: "review-account",
+      color: "#231F20",
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
   state.transactions = [
+    {
+      id: "review-income",
+      type: "income",
+      description: "Salário",
+      amountCents: 480000,
+      date: new Date().toISOString().slice(0, 10),
+      categoryId: "salario",
+      accountId: "review-account",
+      tags: [],
+      recurrence: "monthly",
+      status: "paid",
+      demo: false,
+      createdAt: now,
+      updatedAt: now,
+    },
     {
       id: "review-transaction",
       type: "expense",
@@ -50,6 +89,30 @@ const migratedState = (): PlannerState => {
       recurrence: "none",
       status: "paid",
       demo: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  state.budgets = [
+    {
+      id: "review-budget",
+      categoryId: "alimentacao",
+      month: new Date().toISOString().slice(0, 7),
+      limitCents: 80000,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  state.goals = [
+    {
+      id: "review-goal",
+      name: "Reserva de emergência",
+      targetCents: 1200000,
+      currentCents: 285000,
+      targetDate: `${new Date().getFullYear() + 1}-12-31`,
+      accountId: "review-account",
+      color: "#F8BF4D",
+      icon: "target",
       createdAt: now,
       updatedAt: now,
     },
@@ -84,7 +147,7 @@ export default function ReviewApp() {
   const repository = useMemo(
     () =>
       new MemoryPlannerRepository(
-        query === "migrated"
+        query in reviewNav && query !== "empty"
           ? migratedState()
           : { ...emptyState(), categories: defaultCategories },
       ),
@@ -134,7 +197,7 @@ export default function ReviewApp() {
         onCancel={() => undefined}
       />
     );
-  if (query === "empty" || query === "migrated" || query === "profile")
+  if (query === "profile" || query in reviewNav)
     return (
       <PlannerApp
         profile={profile}
@@ -142,7 +205,9 @@ export default function ReviewApp() {
         onSignOut={async () => undefined}
         onReplayTour={() => undefined}
         onDeleteAccount={async () => undefined}
-        initialNav={query === "profile" ? "settings" : "dashboard"}
+        initialNav={
+          query === "profile" ? "settings" : (reviewNav[query] ?? "dashboard")
+        }
       />
     );
   if (currentStage === "auth")

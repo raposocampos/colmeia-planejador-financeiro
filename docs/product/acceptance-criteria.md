@@ -4,8 +4,11 @@
 
 - Avançar, voltar, pular e finalizar funcionam.
 - Dados demonstrativos são opcionais, identificados e removíveis.
+- O tour usa capturas reais e sanitizadas das cinco áreas do produto sem persistir
+  os dados fictícios exibidos.
 - Sidebar no desktop e barra compacta no celular alcançam todas as seções.
-- Informações auxiliares da sidebar ficam no rodapé real da página em todas as abas.
+- A sidebar desktop permanece fixa durante a rolagem e mantém navegação,
+  privacidade e estado de sincronização visíveis em todas as abas.
 
 ## Dados financeiros
 

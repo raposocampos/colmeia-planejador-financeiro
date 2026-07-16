@@ -9,18 +9,23 @@ describe("onboarding V2", () => {
     expect(
       screen.getByRole("heading", { name: onboardingSteps[0].title }),
     ).toHaveFocus();
-    for (let step = 0; step < 4; step += 1)
+    expect(
+      screen.getByRole("img", { name: onboardingSteps[0].imageAlt }),
+    ).toBeVisible();
+    for (let step = 0; step < 4; step += 1) {
       fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+      expect(
+        screen.getByRole("img", { name: onboardingSteps[step + 1].imageAlt }),
+      ).toBeVisible();
+    }
     fireEvent.click(screen.getByRole("button", { name: /Ir para meu painel/ }));
     expect(finish).toHaveBeenCalledOnce();
   });
 
-  it("declara que os dados fictícios não são persistidos", () => {
+  it("declara que as capturas fictícias não alteram a conta", () => {
     render(<Onboarding onFinish={vi.fn()} />);
     expect(
-      screen.getByText(
-        "Os exemplos deste tour não são gravados no navegador nem na nuvem.",
-      ),
+      screen.getByText("As capturas usam dados fictícios e não alteram sua conta."),
     ).toBeVisible();
     expect(
       screen.queryByLabelText(/Usar dados demonstrativos/),

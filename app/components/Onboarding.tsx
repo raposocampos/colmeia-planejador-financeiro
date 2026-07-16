@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,47 +18,55 @@ export const onboardingSteps = [
     title: "Comece pela visão geral",
     description:
       "Receitas, despesas e o resultado do mês aparecem juntos para você enxergar o momento atual com clareza.",
-    detail: "Os valores abaixo são apenas uma apresentação e não serão salvos.",
+    detail: "A captura usa dados fictícios e mostra onde consultar o resumo do mês.",
     icon: BarChart3,
-    preview: [
-      "Receitas  R$ 4.800,00",
-      "Despesas  R$ 3.120,00",
-      "Resultado  R$ 1.680,00",
-    ],
+    image: "/tutorial/visao-geral.png",
+    imageAlt: "Tela real da visão geral com resumo financeiro e navegação lateral",
+    screenLabel: "Tela: Visão geral",
   },
   {
     title: "Registre suas transações",
     description:
       "Adicione receitas e despesas, depois edite ou exclua quando precisar. Você continua no controle.",
     detail:
-      "Descrições e valores de exemplo existem somente enquanto este tour está aberto.",
+      "Abra “Transações” na barra lateral para pesquisar, filtrar e adicionar lançamentos.",
     icon: ReceiptText,
-    preview: ["Salário de exemplo  + R$ 4.800,00", "Mercado de exemplo  − R$ 286,40"],
+    image: "/tutorial/transacoes.png",
+    imageAlt: "Tela real de transações com pesquisa, filtros e lançamentos",
+    screenLabel: "Tela: Transações",
   },
   {
     title: "Organize contas e cartões",
     description:
       "Cadastre onde o dinheiro fica e acompanhe saldos, faturas, limites usados e disponíveis.",
-    detail: "Nenhuma conta é criada automaticamente ao concluir.",
+    detail:
+      "Use “Contas e cartões” na barra lateral. Nada é criado automaticamente ao concluir.",
     icon: Landmark,
-    preview: ["Conta de exemplo", "Cartão de exemplo  32% do limite"],
+    image: "/tutorial/contas-cartoes.png",
+    imageAlt: "Tela real de contas e cartões com saldos, fatura e limite",
+    screenLabel: "Tela: Contas e cartões",
   },
   {
     title: "Planeje com orçamentos e metas",
     description:
       "Defina referências mensais e acompanhe objetivos no seu ritmo, com mensagens educativas e sem julgamento.",
-    detail: "A Colmeia não transforma esses exemplos em recomendação financeira.",
+    detail:
+      "Orçamentos e Metas ficam em áreas separadas e não constituem recomendação financeira.",
     icon: Target,
-    preview: ["Alimentação  68% utilizado", "Reserva de exemplo  24% concluída"],
+    image: "/tutorial/orcamentos-metas.png",
+    imageAlt: "Tela real de orçamentos com progresso mensal por categoria",
+    screenLabel: "Tela: Orçamentos e metas",
   },
   {
     title: "Seus dados, suas escolhas",
     description:
       "A nuvem sincroniza seus registros entre dispositivos. Você também pode exportar JSON e CSV quando quiser.",
     detail:
-      "Em dispositivos compartilhados, saia da conta e evite manter a sessão conectada.",
+      "Em Configurações você encontra perfil, backup e privacidade. Em dispositivos compartilhados, sempre saia da conta.",
     icon: Database,
-    preview: ["Sincronização protegida por conta", "Backup JSON e exportação CSV"],
+    image: "/tutorial/configuracoes-backup.png",
+    imageAlt: "Tela real de configurações com perfil, backup e privacidade",
+    screenLabel: "Tela: Configurações e backup",
   },
 ] as const;
 
@@ -73,6 +82,7 @@ export function Onboarding({ onFinish, onSkip, replay = false }: OnboardingProps
   const titleRef = useRef<HTMLHeadingElement>(null);
   const current = onboardingSteps[step];
   const StepIcon = current.icon;
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   useEffect(() => titleRef.current?.focus(), [step]);
 
@@ -98,16 +108,22 @@ export function Onboarding({ onFinish, onSkip, replay = false }: OnboardingProps
       <section className="onboarding-card" aria-labelledby="onboarding-title">
         <div
           className="onboarding-art onboarding-art--preview"
-          aria-label="Dados fictícios de demonstração"
+          aria-label={`Tutorial visual: ${current.screenLabel}`}
         >
           <span className="feature-hex" aria-hidden="true">
             <StepIcon size={34} strokeWidth={1.8} />
           </span>
-          <div className="tour-preview">
-            {current.preview.map((line) => (
-              <span key={line}>{line}</span>
-            ))}
-          </div>
+          <figure className="tour-screen">
+            <Image
+              src={basePath + current.image}
+              alt={current.imageAlt}
+              width={1280}
+              height={800}
+              priority={step === 0}
+              unoptimized
+            />
+            <figcaption>{current.screenLabel}</figcaption>
+          </figure>
         </div>
         <div className="onboarding-copy">
           <p className="eyebrow">
@@ -162,7 +178,7 @@ export function Onboarding({ onFinish, onSkip, replay = false }: OnboardingProps
         </div>
       </section>
       <p className="onboarding-note">
-        Os exemplos deste tour não são gravados no navegador nem na nuvem.
+        As capturas usam dados fictícios e não alteram sua conta.
       </p>
     </main>
   );

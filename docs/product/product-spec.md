@@ -46,7 +46,7 @@ OFX, recomendação de investimentos, notificações remotas e backend.
 - “Manter-me conectado” opcional e desmarcado por padrão;
 - Supabase/PostgreSQL como fonte oficial, cache local por usuário e leitura offline;
 - migração segura do IndexedDB legado, sem merge automático com nuvem não vazia;
-- onboarding de cinco etapas uma vez por conta, com exemplos somente em memória;
+- onboarding de cinco etapas uma vez por conta, com capturas reais e sanitizadas;
 - perfil, logout, exportação, exclusão, Termos e Privacidade.
 
 Não fazem parte desta V2: aposentadoria, família, filhos, educação, Open Finance,

@@ -6,25 +6,25 @@ Branch: `feat/auth-cloud-sync-onboarding-v2`
 
 Pull Request: https://github.com/raposocampos/colmeia-planejador-financeiro/pull/3
 
-Estado: **preparação de staging autorizada; merge e produção bloqueados**
+Estado: **merge e produção autorizados; deploy bloqueado até SMTP funcional**
 
 ## Ajuste solicitado após a primeira revisão
 
 Em 16/07/2026, Lucas aprovou visualmente login e onboarding e solicitou que a
-barra lateral escura alcançasse o final das páginas em todas as abas. O shell agora
-mantém uma faixa `#231F20` por toda a altura do documento no desktop, sem alterar
-o menu móvel ou a impressão. Um teste de regressão percorre Visão geral,
+barra lateral escura permanecesse visível durante a rolagem. A sidebar agora é fixa,
+ocupa `100svh` e mantém navegação, privacidade, versão e sincronização na viewport,
+sem alterar o menu móvel ou a impressão. Um teste de regressão percorre Visão geral,
 Transações, Contas e cartões, Orçamentos, Metas, Relatórios e Configurações.
 
 Evidências atualizadas:
 
-- [Dashboard com sidebar até o final](../quality/screenshots/v2/dashboard-empty.png)
-- [Configurações com sidebar até o final](../quality/screenshots/v2/profile-privacy.png)
+- [Dashboard com sidebar fixa](../quality/screenshots/v2/dashboard-empty.png)
+- [Configurações com sidebar fixa](../quality/screenshots/v2/profile-privacy.png)
 
-Na segunda revisão, Lucas apontou que o bloco “Sincronizado com privacidade” ainda
-parecia solto no meio das páginas longas. A sidebar agora acompanha a altura real
-de cada aba e mantém esse bloco, a versão e o estado de sincronização no rodapé do
-documento. O menu móvel continua fixo somente quando aberto.
+Na revisão final, Lucas pediu que o painel lateral voltasse ao comportamento da
+primeira versão. A coluna deixou de rolar com o documento e o bloco “Sincronizado
+com privacidade” fica ancorado ao final da viewport. O menu móvel continua fixo
+somente quando aberto.
 
 ## 1. Resumo das alterações
 
@@ -38,7 +38,8 @@ O dashboard, a linguagem e a identidade visual do MVP foram preservados.
 - `app/AppGate.tsx`, `app/components/AuthScreen.tsx`, `app/components/Onboarding.tsx`;
 - `app/components/MigrationDialog.tsx`, `app/PlannerApp.tsx`;
 - `app/lib/repositories/`, `app/lib/supabase.ts`, `app/lib/migration.ts`;
-- `supabase/migrations/202607160001_auth_cloud_sync_v2.sql`;
+- `supabase/migrations/202607160001_auth_cloud_sync_v2.sql` e migrations de grants;
+- `supabase/templates/` com modelos de confirmação e recuperação versionados;
 - `app/termos/page.tsx`, `app/privacidade/page.tsx`;
 - `docs/security/`, `docs/operations/` e `.agents/skills/colmeia-*`.
 
@@ -49,40 +50,48 @@ O dashboard, a linguagem e a identidade visual do MVP foram preservados.
 “Receitas, despesas e o resultado do mês aparecem juntos para você enxergar o
 momento atual com clareza.”
 
-“Os valores abaixo são apenas uma apresentação e não serão salvos.”
+“A captura usa dados fictícios e mostra onde consultar o resumo do mês.”
 
-Exemplos em memória: “Receitas R$ 4.800,00”, “Despesas R$ 3.120,00” e
-“Resultado R$ 1.680,00”.
+Captura sanitizada: `public/tutorial/visao-geral.png`.
 
 ### Etapa 2 — Registre suas transações
 
 “Adicione receitas e despesas, depois edite ou exclua quando precisar. Você
 continua no controle.”
 
-“Descrições e valores de exemplo existem somente enquanto este tour está aberto.”
+“Abra “Transações” na barra lateral para pesquisar, filtrar e adicionar lançamentos.”
+
+Captura sanitizada: `public/tutorial/transacoes.png`.
 
 ### Etapa 3 — Organize contas e cartões
 
 “Cadastre onde o dinheiro fica e acompanhe saldos, faturas, limites usados e
 disponíveis.”
 
-“Nenhuma conta é criada automaticamente ao concluir.”
+“Use “Contas e cartões” na barra lateral. Nada é criado automaticamente ao concluir.”
+
+Captura sanitizada: `public/tutorial/contas-cartoes.png`.
 
 ### Etapa 4 — Planeje com orçamentos e metas
 
 “Defina referências mensais e acompanhe objetivos no seu ritmo, com mensagens
 educativas e sem julgamento.”
 
-“A Colmeia não transforma esses exemplos em recomendação financeira.”
+“Orçamentos e Metas ficam em áreas separadas e não constituem recomendação financeira.”
+
+Captura sanitizada: `public/tutorial/orcamentos-metas.png`.
 
 ### Etapa 5 — Seus dados, suas escolhas
 
 “A nuvem sincroniza seus registros entre dispositivos. Você também pode exportar
 JSON e CSV quando quiser.”
 
-“Em dispositivos compartilhados, saia da conta e evite manter a sessão conectada.”
+“Em Configurações você encontra perfil, backup e privacidade. Em dispositivos
+compartilhados, sempre saia da conta.”
 
-Nota permanente: “Os exemplos deste tour não são gravados no navegador nem na nuvem.”
+Captura sanitizada: `public/tutorial/configuracoes-backup.png`.
+
+Nota permanente: “As capturas usam dados fictícios e não alteram sua conta.”
 
 ## 4. Antes e depois
 
@@ -90,7 +99,7 @@ Nota permanente: “Os exemplos deste tour não são gravados no navegador nem n
 | ----------- | ---------------------------------- | ------------------------------------------------------- |
 | Entrada     | onboarding local direto            | login/cadastro antes do painel                          |
 | Dados       | IndexedDB oficial                  | Supabase oficial + cache separado por usuário           |
-| Onboarding  | 4 passos, demonstração persistível | 5 etapas, exemplos somente em memória                   |
+| Onboarding  | 4 passos, demonstração persistível | 5 etapas com capturas reais e sanitizadas               |
 | Identidade  | perfil local `LF`                  | nome, e-mail, confirmação e provedores                  |
 | Offline     | leitura e edição local             | leitura do cache; edição bloqueada para evitar conflito |
 | Privacidade | aviso local-first                  | perfil, exclusão, Termos e Privacidade preliminares     |
@@ -138,9 +147,9 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 ## 8. Limitações conhecidas
 
-- Supabase de staging, confirmação de e-mail, schema, RLS, Site URL e callbacks
-  hospedados foram configurados e validados; SMTP próprio e Google OAuth continuam
-  pendentes por falta de credenciais exclusivas.
+- Supabase de staging e produção, schema, grants, RLS, Site URL e callbacks foram
+  configurados e validados. O plano gratuito recusou templates personalizados sem
+  SMTP próprio, e o provedor padrão não atende usuários externos ao time.
 - O host navegável usa um repositório GitHub Pages separado e aceita somente dados
   fictícios; o Sites público e a produção permaneceram inalterados.
 - Não há edição offline nem merge automático de conflitos.
@@ -149,7 +158,8 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 ## 9. Riscos antes da produção
 
-- configuração incorreta de RLS, SMTP, OAuth, domínio ou região;
+- SMTP ausente impedindo confirmação e recuperação para o público externo;
+- configuração incorreta de OAuth ou domínio;
 - cotas e retenção do plano Supabase escolhido;
 - XSS ou dispositivo comprometido expondo uma sessão persistida;
 - tentativa de mesclar manualmente estados divergentes sem processo futuro;
@@ -176,7 +186,7 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 - [x] Aprovo o comportamento de manter conectado
 - [x] Aprovo as páginas de privacidade e termos
 - [x] Autorizo preparar staging
-- [ ] Autorizo publicar em produção
+- [x] Autorizo publicar em produção
 
 Registro de revisão: em 16/07/2026, Lucas Campos respondeu literalmente `APROVADO`
 após as duas revisões da sidebar e das evidências visuais.
@@ -193,5 +203,9 @@ testes reais de isolamento/migração. O run 29537395850 publicou somente o host
 isolado de staging e repetiu todos os gates. Nenhum merge ou deploy de produção foi
 executado.
 
-Publicação em produção continua exigindo tarefa futura e autorização explícita;
-este documento não autoriza merge nem deploy de produção por si só.
+Na solicitação seguinte, Lucas declarou “Agora faça os ajustes e suba para Prod”,
+autorizando explicitamente merge e publicação após os ajustes. A infraestrutura de
+produção foi preparada e testada, mas o deploy permanece bloqueado pelo gate de
+SMTP: sem provedor próprio, confirmação e recuperação não funcionam para usuários
+externos ao time do Supabase. A autorização continua válida após esse gate ser
+atendido.

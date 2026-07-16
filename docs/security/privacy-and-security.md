@@ -7,8 +7,9 @@ somente no IndexedDB. Na V2 em revisão, o Supabase passa a ser a fonte oficial 
 IndexedDB separado por usuário funciona como cache de leitura. O banco legado é
 preservado durante a migração e nunca é apagado automaticamente.
 
-O repositório inclui apenas dados fictícios. O projeto Supabase de staging também
-recebe somente usuários e registros descartáveis criados pelos testes automatizados.
+O repositório inclui apenas dados fictícios. Os projetos Supabase de staging e
+produção receberam somente usuários e registros descartáveis criados pelos testes
+automatizados; a limpeza foi executada ao final.
 
 ## Ameaças e controles
 
@@ -22,6 +23,8 @@ recebe somente usuários e registros descartáveis criados pelos testes automati
   idempotência e bloqueio quando o remoto não está vazio.
 - Staging: chaves administrativas ficam no GitHub Environment e não entram no
   bundle; testes fictícios são removidos ao final.
+- Produção: região `sa-east-1`, exposição automática de novas tabelas desabilitada,
+  privilégios SQL explícitos e RLS remoto testado com usuários A/B e acesso anônimo.
 - XSS: React escapa texto; CSV/JSON nunca são executados como HTML.
 - Dependências: lockfile versionado e gates antes de release.
 
@@ -29,5 +32,6 @@ recebe somente usuários e registros descartáveis criados pelos testes automati
 
 Quem tiver acesso ao perfil do navegador pode acessar sessão e IndexedDB. Backup
 JSON não é criptografado. O produto não deve armazenar senhas bancárias, cartões
-completos, documentos ou credenciais. SMTP próprio, Google OAuth, callbacks
-hospedados, retenção e textos jurídicos ainda precisam de validação antes da produção.
+completos, documentos ou credenciais. Os callbacks de produção foram configurados,
+mas SMTP próprio e teste de entrega externa continuam obrigatórios antes do deploy;
+Google OAuth, retenção e textos jurídicos ainda precisam de validação operacional.

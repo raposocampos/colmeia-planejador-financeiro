@@ -6,6 +6,7 @@ describe("telas de autenticação", () => {
   it("login é acessível, manter conectado inicia desmarcado e valida campos", async () => {
     render(<AuthScreen reviewOnAuthenticated={vi.fn()} />);
     expect(screen.getByRole("heading", { name: "Entrar na Colmeia" })).toBeVisible();
+    expect(screen.getAllByRole("button", { name: "Mostrar senha" })).toHaveLength(1);
     expect(screen.getByLabelText(/Manter-me conectado/)).not.toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: /^Entrar$/ }));
     expect(

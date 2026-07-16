@@ -28,7 +28,7 @@ PR em rascunho: https://github.com/raposocampos/colmeia-planejador-financeiro/pu
 - Supabase é fonte oficial; IndexedDB é cache e origem legada.
 - Escrita remota antes do cache; edição offline desabilitada.
 - Sessão usa armazenamento alternável entre sessão e dispositivo.
-- Dados de demonstração ficam somente em memória durante o tour.
+- Capturas do tour usam dados fictícios sanitizados e não alteram a conta.
 - Não existe merge automático local/remoto nesta fase.
 
 ## Bloqueios externos

@@ -12,6 +12,8 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] Builds Vinext/Sites e GitHub Pages aprovados localmente.
 - [x] Migração, estrutura RLS e ownership por sessão verificados estaticamente.
 - [x] Staging real aprovado: RLS A/B/anônimo, cascata e migração idempotente.
+- [x] Produção real em `sa-east-1` aprovada: grants explícitos, RLS A/B/anônimo,
+      cascata e migração idempotente.
 - [x] Auditoria de dependências sem vulnerabilidade alta ou crítica.
 - [x] Sem segredos ou .env versionado.
 
@@ -23,7 +25,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] Dashboard reage e persistência sobrevive à recarga.
 - [x] Filtros e relatórios coerentes.
 - [x] JSON/CSV exportam; importações mostram prévia.
-- [x] Exemplos do onboarding permanecem somente em memória.
+- [x] Capturas reais e sanitizadas do onboarding não criam dados na conta.
 - [x] Migração mostra contagens, backup e impede merge silencioso.
 
 ## Marca e acessibilidade
@@ -34,16 +36,17 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] Favicon usa a assinatura hexagonal da Colmeia e possui fallback PNG.
 - [x] Contraste, foco, labels, teclado e reduced motion verificados.
 - [x] Gráficos possuem alternativa textual.
-- [x] Sidebar e faixa escura cobrem toda a altura nas sete abas desktop.
-- [x] Bloco de privacidade e rodapé ficam no final real da sidebar em todas as abas.
+- [x] Sidebar fica fixa, ocupa a viewport e continua navegável nas sete abas desktop.
+- [x] Bloco de privacidade e rodapé ficam ancorados ao final da sidebar visível.
 
 ## Release
 
 - [x] GitHub Actions atualizado para os gates da V2.
 - [x] Branch de revisão isolada da `main`.
-- [ ] Merge autorizado por Lucas.
+- [x] Merge autorizado por Lucas no pedido explícito de publicação em produção.
 - [x] Preparação de staging autorizada por Lucas em 16/07/2026.
-- [ ] Produção autorizada por Lucas.
+- [x] Produção autorizada por Lucas em 16/07/2026.
+- [ ] SMTP próprio configurado e entrega para usuário externo comprovada.
 
 ## Evidências
 
@@ -58,8 +61,9 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - `docs/quality/screenshots/v2/dashboard-migrated.png`
 - `docs/quality/screenshots/v2/profile-privacy.png`
 
-A V2 não foi publicada em produção. A preparação de staging permanece isolada na
-branch e no GitHub Environment `staging`; o MVP público não foi alterado.
+A V2 ainda não foi publicada em produção. Código, banco, URLs de callback e
+variáveis públicas dos hosts estão preparados; o deploy final permanece bloqueado
+até existir SMTP funcional para usuários externos ao time do Supabase.
 
 Evidências integradas: dry-run
 [29535218591](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591)

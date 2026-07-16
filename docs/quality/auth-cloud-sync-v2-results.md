@@ -12,8 +12,8 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 | `pnpm test:e2e`                  | aprovado; 15 execuções, 1 skip desktop-only no mobile e nenhum erro de console |
 | `pnpm build`                     | aprovado; build Vinext concluído                                               |
 | `pnpm build:pages`               | aprovado; 6 rotas estáticas e not-found geradas                                |
-| `pnpm verify:migrations`         | aprovado; 1 migração, 9 tabelas e 4 políticas por tabela                       |
-| `pnpm check:secrets`             | aprovado; 141 arquivos verificados                                             |
+| `pnpm verify:migrations`         | aprovado; 3 migrations, 9 tabelas, políticas RLS e grants explícitos           |
+| `pnpm check:secrets`             | aprovado; 159 arquivos verificados                                             |
 | `pnpm audit:deps`                | aprovado; nenhuma vulnerabilidade alta ou crítica                              |
 | `git diff --check`               | aprovado; sem erro de whitespace                                               |
 
@@ -27,14 +27,15 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
   autorizado. A branch inclui a matriz SQL e a verificação estática usada no CI.
 - Nenhum deploy, staging ou merge foi executado.
 
-## Ajuste após a primeira revisão visual
+## Ajustes após as revisões visuais
 
-Após o feedback de Lucas, o shell desktop passou a pintar a faixa lateral escura
-por toda a altura do documento. Na segunda revisão, a sidebar passou a acompanhar
-a altura real de cada aba; assim, o bloco de privacidade e o rodapé são posicionados
-no final da página, em vez de ficarem no meio de documentos longos. Um cenário
-Playwright percorre as sete abas e compara shell, sidebar e rodapé. O comportamento
-mobile continua usando o menu fixo, e a impressão permanece sem a faixa estrutural.
+Após o feedback final de Lucas, o campo de senha passou a remover o controle nativo
+duplicado do Edge e a delegar o foco visual somente ao contêiner. A sidebar desktop
+ficou fixa em `100svh`, com navegação e rodapé sempre disponíveis durante a rolagem.
+O onboarding substituiu cartões textuais por cinco capturas reais e sanitizadas do
+dashboard, transações, contas/cartões, orçamentos/metas e configurações. Um cenário
+Playwright percorre as sete abas, rola o documento e verifica posição, viewport e
+rodapé; outro garante que as capturas não criam dados persistentes.
 
 ## Auditorias aplicadas
 
@@ -47,7 +48,8 @@ mobile continua usando o menu fixo, e a impressão permanece sem a faixa estrutu
 - `frontend-qa`: fluxos críticos, responsividade, console, build e screenshots
   revisados.
 - `colmeia-release-approval` e `release-github`: release mantida bloqueada; somente
-  branch e PR de revisão são permitidos antes de `APROVADO`.
+  branch e PR de revisão eram permitidos antes de `APROVADO`; a produção foi depois
+  autorizada explicitamente e permanece condicionada aos gates técnicos.
 
 ## Preparação de staging após aprovação
 
@@ -65,7 +67,7 @@ produção. A preparação adicionou:
 - build guardado somente como artefato por sete dias.
 
 Após essas mudanças, instalação congelada com pnpm 11.7.0, typecheck, lint, formato,
-38 testes, 15 execuções E2E, verificação SQL, varredura de 146 arquivos, auditoria,
+38 testes, 15 execuções E2E, verificação SQL, varredura de 159 arquivos, auditoria,
 build Vinext, build Pages e `git diff --check` passaram. Produção, Sites, Pages e
 `main` permaneceram intocados.
 
@@ -113,3 +115,20 @@ Evidências:
 SMTP próprio e Google OAuth não foram ativados por ausência de credenciais próprias.
 O teste de entrega de e-mail, confirmação real e recuperação permanece pendente de
 um endereço de teste autorizado. Merge e produção continuam bloqueados.
+
+## Preparação do ambiente de produção
+
+Após a autorização explícita “faça os ajustes e suba para Prod”, foi criado o
+projeto `colmeia-producao` em `sa-east-1`, com Data API ativa, exposição automática
+de novas tabelas desabilitada e RLS automático. As migrations versionadas foram
+aplicadas; grants mínimos para `authenticated` e administrativos para `service_role`
+foram adicionados porque a produção não usa privilégios automáticos. O teste remoto
+aprovou isolamento A/B, bloqueio anônimo, ownership, cascata e migração idempotente.
+As contas fictícias foram removidas e a senha de banco foi rotacionada.
+
+Sites e GitHub receberam somente a URL e a chave pública publicável do projeto; não
+há chave administrativa no bundle. Site URL e callbacks de confirmação/recuperação
+foram configurados para Sites e GitHub Pages. Os templates em português ficaram
+versionados em `supabase/templates/`, mas a API do plano gratuito recusou aplicá-los
+sem SMTP próprio. Como o provedor padrão também limita entrega a membros autorizados
+do time, merge e deploy seguem bloqueados até SMTP e teste externo aprovados.

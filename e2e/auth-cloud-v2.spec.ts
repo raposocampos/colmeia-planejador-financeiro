@@ -113,13 +113,15 @@ test("migração exibe contagens, backup e importação sem merge silencioso", a
   ).toBeVisible();
 });
 
-test("dados demonstrativos do tour não aparecem no painel persistente", async ({
-  page,
-}) => {
+test("capturas do tour não criam dados no painel persistente", async ({ page }) => {
   await page.goto("/?review=onboarding");
-  await expect(page.getByText("Receitas R$ 4.800,00")).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: "Tela real da visão geral com resumo financeiro e navegação lateral",
+    }),
+  ).toBeVisible();
   await page.goto("/?review=empty");
-  await expect(page.getByText("Receitas R$ 4.800,00")).toHaveCount(0);
+  await expect(page.getByTestId("onboarding-v2")).toHaveCount(0);
   await expect(page.getByText("Nenhuma transação registrada.")).toBeVisible();
 });
 
@@ -133,7 +135,7 @@ test("layout de autenticação e painel funciona no viewport do projeto", async 
   await expect(page.getByText("Perfil e sessão")).toBeVisible();
 });
 
-test("sidebar e informações finais acompanham todas as abas desktop", async ({
+test("sidebar permanece fixa e navegável em todas as abas desktop", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "sidebar desktop não existe no mobile");
@@ -152,45 +154,38 @@ test("sidebar e informações finais acompanham todas as abas desktop", async ({
   for (const tab of tabs) {
     await page.getByRole("button", { name: tab, exact: true }).click();
     const layout = await page.evaluate(() => {
-      const shell = document.querySelector<HTMLElement>(".app-shell");
-      const main = document.querySelector<HTMLElement>(".app-main");
       const sidebar = document.querySelector<HTMLElement>(".sidebar");
       const primary = document.querySelector<HTMLElement>(".sidebar-primary");
       const footer = document.querySelector<HTMLElement>(".sidebar footer");
-      if (!shell || !main || !sidebar || !primary || !footer)
-        throw new Error("layout principal ausente");
-      const shellStyle = getComputedStyle(shell);
+      if (!sidebar || !primary || !footer) throw new Error("layout principal ausente");
       const sidebarStyle = getComputedStyle(sidebar);
       const sidebarRect = sidebar.getBoundingClientRect();
       const footerRect = footer.getBoundingClientRect();
       return {
-        shellHeight: shell.scrollHeight,
-        mainHeight: main.scrollHeight,
+        viewportHeight: window.innerHeight,
         sidebarHeight: sidebarRect.height,
+        sidebarTop: sidebarRect.top,
         footerBottomGap: sidebarRect.bottom - footerRect.bottom,
-        backgroundImage: shellStyle.backgroundImage,
         sidebarPosition: sidebarStyle.position,
-        sidebarBottom: sidebarStyle.bottom,
         primaryPosition: getComputedStyle(primary).position,
       };
     });
 
     expect(
-      layout.shellHeight,
-      `${tab}: shell menor que o conteúdo`,
-    ).toBeGreaterThanOrEqual(layout.mainHeight);
-    expect(layout.backgroundImage, `${tab}: faixa lateral ausente`).toContain(
-      "linear-gradient",
-    );
-    expect(
-      Math.abs(layout.sidebarHeight - layout.shellHeight),
-      `${tab}: sidebar não acompanha a altura do documento`,
+      Math.abs(layout.sidebarHeight - layout.viewportHeight),
+      `${tab}: sidebar não ocupa a altura visível`,
     ).toBeLessThanOrEqual(1);
+    expect(layout.sidebarTop, `${tab}: sidebar saiu do topo`).toBe(0);
     expect(layout.footerBottomGap, `${tab}: informações fora do rodapé`).toBeLessThan(
       40,
     );
-    expect(layout.sidebarPosition).toBe("absolute");
-    expect(layout.sidebarBottom).toBe("0px");
-    expect(layout.primaryPosition).toBe("sticky");
+    expect(layout.sidebarPosition).toBe("fixed");
+    expect(layout.primaryPosition).toBe("static");
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const fixedTop = await page
+      .locator(".sidebar")
+      .evaluate((element) => element.getBoundingClientRect().top);
+    expect(fixedTop, `${tab}: sidebar rolou com o conteúdo`).toBe(0);
   }
 });

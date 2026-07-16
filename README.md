@@ -17,7 +17,7 @@ Versão privada publicada: https://colmeia-planejador-financeiro.lucascampos.cha
 ## Funcionalidades
 
 - Autenticação por e-mail/senha, confirmação, Google OAuth e recuperação (V2 em revisão).
-- Onboarding autenticado em cinco etapas, com demonstração somente em memória.
+- Onboarding autenticado em cinco etapas, com capturas reais e dados sanitizados.
 - Migração segura do IndexedDB legado, Supabase como fonte oficial e cache por usuário.
 - Dashboard mensal, saldo, categorias, orçamentos, metas e compromissos.
 - Contas, cartões e transações com edição, busca, filtro e confirmação.

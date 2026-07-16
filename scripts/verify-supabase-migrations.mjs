@@ -48,8 +48,15 @@ for (const table of tables) {
 
 if (!/\(select auth\.uid\(\)\) = user_id/i.test(sql))
   failures.push("As policies não usam a identidade autenticada esperada.");
-if (/service[_-]?role/i.test(sql))
-  failures.push("Migration contém referência proibida a service role.");
+const sqlWithoutComments = sql.replace(/--.*$/gm, "");
+const sqlWithoutAdministrativeGrants = sqlWithoutComments.replace(
+  /grant\b[^;]*\bto\s+service_role\s*;/gi,
+  "",
+);
+if (/service[_-]?role/i.test(sqlWithoutAdministrativeGrants))
+  failures.push("Migration usa service role fora de um GRANT administrativo.");
+if (!/grant all privileges on table[^;]+to service_role\s*;/i.test(sqlWithoutComments))
+  failures.push("Privilégios administrativos explícitos estão ausentes.");
 if (!/create (?:or replace )?function public\.migrate_legacy_planner/i.test(sql))
   failures.push("RPC transacional de migração ausente.");
 if (!/create (?:or replace )?function public\.delete_my_account/i.test(sql))

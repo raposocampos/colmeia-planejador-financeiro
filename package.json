@@ -12,6 +12,7 @@
     "build:review": "node scripts/build-review.mjs",
     "serve:review": "node scripts/serve-static.mjs out",
     "screenshots:v2": "node scripts/capture-v2-screenshots.mjs",
+    "screenshots:onboarding": "node scripts/capture-onboarding-tutorial.mjs",
     "start": "node scripts/run-vinext.mjs start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
