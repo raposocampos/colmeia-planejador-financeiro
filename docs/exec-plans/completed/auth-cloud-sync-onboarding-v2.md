@@ -1,6 +1,6 @@
 # Plano de execução — autenticação e nuvem V2
 
-Atualizado em 16/07/2026. Produção bloqueada até aprovação explícita.
+Concluído em 16/07/2026. Produção bloqueada até aprovação explícita.
 
 ## Estado
 
@@ -16,7 +16,9 @@ Atualizado em 16/07/2026. Produção bloqueada até aprovação explícita.
 - [x] Atualizar documentação, CI e testes.
 - [x] Executar auditorias de marca, segurança, migração e release.
 - [x] Gerar screenshots e documento de aprovação.
-- [ ] Abrir PR de revisão sem merge e solicitar `APROVADO`.
+- [x] Abrir PR de revisão sem merge e solicitar `APROVADO`.
+
+PR em rascunho: https://github.com/raposocampos/colmeia-planejador-financeiro/pull/3
 
 ## Decisões
 
@@ -26,7 +28,8 @@ Atualizado em 16/07/2026. Produção bloqueada até aprovação explícita.
 - Dados de demonstração ficam somente em memória durante o tour.
 - Não existe merge automático local/remoto nesta fase.
 
-## Bloqueios externos previstos
+## Bloqueios externos
 
 Configuração real de projeto Supabase, SMTP, Google OAuth, URLs autorizadas e
-revisão jurídica pertencem a staging/produção e não serão inventadas nesta branch.
+revisão jurídica pertencem a staging/produção e não foram inventadas nesta branch.
+Merge, staging e produção permanecem bloqueados até autorização explícita de Lucas.

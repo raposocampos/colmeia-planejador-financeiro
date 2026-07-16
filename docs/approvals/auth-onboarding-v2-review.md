@@ -4,6 +4,8 @@ Data da preparação: 16/07/2026
 
 Branch: `feat/auth-cloud-sync-onboarding-v2`
 
+Pull Request: https://github.com/raposocampos/colmeia-planejador-financeiro/pull/3
+
 Estado: **não publicada; merge, staging e produção bloqueados**
 
 ## 1. Resumo das alterações
