@@ -7,6 +7,7 @@ describe("telas de autenticação", () => {
     render(<AuthScreen reviewOnAuthenticated={vi.fn()} />);
     expect(screen.getByRole("heading", { name: "Entrar na Colmeia" })).toBeVisible();
     expect(screen.getAllByRole("button", { name: "Mostrar senha" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Entrar com Google" })).toBeNull();
     expect(screen.getByLabelText(/Manter-me conectado/)).not.toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: /^Entrar$/ }));
     expect(

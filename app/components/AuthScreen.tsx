@@ -154,6 +154,7 @@ function LoginForm({
   onMode: (mode: AuthMode) => void;
   reviewOnAuthenticated?: () => void;
 }) {
+  const googleAuthEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
   const {
     register,
     handleSubmit,
@@ -223,13 +224,15 @@ function LoginForm({
           {isSubmitting ? "Entrando..." : "Entrar"}
         </button>
       </form>
-      <button
-        className="button button--secondary auth-google"
-        type="button"
-        onClick={google}
-      >
-        Entrar com Google
-      </button>
+      {googleAuthEnabled && (
+        <button
+          className="button button--secondary auth-google"
+          type="button"
+          onClick={google}
+        >
+          Entrar com Google
+        </button>
+      )}
       <button className="text-button" type="button" onClick={() => onMode("forgot")}>
         Esqueci minha senha
       </button>

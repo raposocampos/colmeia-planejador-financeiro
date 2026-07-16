@@ -9,6 +9,9 @@
   RLS, migração e callbacks foram validados. O provedor padrão de e-mail do plano
   gratuito entrega apenas a endereços autorizados do time, por isso o deploy público
   permanece bloqueado até configurar SMTP próprio e comprovar confirmação/recuperação.
+- O botão Google OAuth fica oculto por padrão e só é compilado quando
+  `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`; ele não será exibido em produção até o
+  provedor e os callbacks do Google serem validados.
 - RLS passou na verificação estática e no teste remoto A/B/anônimo, incluindo
   ownership e exclusão em cascata no projeto exclusivo de staging.
 - A V2 não edita offline nem resolve conflitos; remoto não vazio nunca recebe merge automático.

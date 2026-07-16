@@ -132,3 +132,5 @@ foram configurados para Sites e GitHub Pages. Os templates em português ficaram
 versionados em `supabase/templates/`, mas a API do plano gratuito recusou aplicá-los
 sem SMTP próprio. Como o provedor padrão também limita entrega a membros autorizados
 do time, merge e deploy seguem bloqueados até SMTP e teste externo aprovados.
+Google OAuth permanece desativado e seu botão fica oculto por padrão, evitando uma
+ação não funcional até que credenciais e callbacks próprios sejam validados.

@@ -127,7 +127,8 @@ Evidências “depois”:
 
 - Cadastro valida nome, e-mail, senha de 12 caracteres, confirmação e aceites.
 - O Supabase envia a confirmação; `AppGate` impede o painel sem `email_confirmed_at`.
-- Login Google usa o provedor `google`, PKCE e callback `/auth/callback/`.
+- Login Google usa o provedor `google`, PKCE e callback `/auth/callback/`, mas o
+  botão fica oculto até `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true` e validação do provedor.
 - Recuperação sempre responde de modo neutro; redefinição ocorre em rota dedicada.
 - Logout encerra a sessão local e limpa as cópias dos dois storages.
 - CI simula provedores; não automatiza uma conta Google real.
