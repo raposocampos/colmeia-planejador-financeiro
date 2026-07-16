@@ -24,14 +24,15 @@
 - [x] Nome oficial em toda a interface.
 - [x] Paleta e tipografia coerentes com o brandbook.
 - [x] Hexágonos controlados e sem aparência genérica de fintech.
+- [x] Favicon usa a assinatura hexagonal da Colmeia e possui fallback PNG.
 - [x] Contraste, foco, labels, teclado e reduced motion verificados.
 - [x] Gráficos possuem alternativa textual.
 
 ## Publicação
 
-- [ ] GitHub Actions aprovado.
-- [ ] GitHub Pages carrega JS, CSS, manifest e service worker.
-- [x] Sites privado publicado e aberto.
+- [x] GitHub Actions aprovado.
+- [x] GitHub Pages carrega JS, CSS, manifest, favicon e service worker.
+- [x] Sites público publicado e aberto.
 - [x] Console publicado sem erro ou aviso relevante.
 
 ## Evidências
@@ -44,3 +45,4 @@ O E2E Playwright está implementado, mas não foi executado neste ambiente porqu
 política do navegador bloqueou a URL local. Os mesmos fluxos críticos foram
 percorridos na publicação HTTPS: onboarding, exclusão reforçada, criação de
 transação, atualização do dashboard, recarga com persistência e responsividade.
+O gate foi tentado novamente na alteração do favicon e encontrou a mesma restrição.

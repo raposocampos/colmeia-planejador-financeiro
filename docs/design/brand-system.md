@@ -35,6 +35,9 @@ O ícone CSS combina seis células pequenas. Hexágonos aparecem no brand lockup
 onboarding, meta e detalhes de fundo. Cards, botões, tabelas e formulários
 permanecem retangulares e legíveis.
 
+O favicon reutiliza a mesma composição de seis células, com fundo mel e centro
+preto quente, para manter a marca reconhecível em tamanhos reduzidos.
+
 ## Tom
 
 Clareza, acolhimento, confiança, organização e educação sem julgamento.
