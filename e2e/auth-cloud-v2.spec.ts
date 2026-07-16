@@ -132,3 +132,49 @@ test("layout de autenticação e painel funciona no viewport do projeto", async 
   await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
   await expect(page.getByText("Perfil e sessão")).toBeVisible();
 });
+
+test("sidebar cobre toda a altura do documento em todas as abas desktop", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "sidebar desktop não existe no mobile");
+
+  await page.goto("/?review=profile");
+  const tabs = [
+    "Visão geral",
+    "Transações",
+    "Contas e cartões",
+    "Orçamentos",
+    "Metas",
+    "Relatórios",
+    "Configurações",
+  ];
+
+  for (const tab of tabs) {
+    await page.getByRole("button", { name: tab, exact: true }).click();
+    const layout = await page.evaluate(() => {
+      const shell = document.querySelector<HTMLElement>(".app-shell");
+      const main = document.querySelector<HTMLElement>(".app-main");
+      const sidebar = document.querySelector<HTMLElement>(".sidebar");
+      if (!shell || !main || !sidebar) throw new Error("layout principal ausente");
+      const shellStyle = getComputedStyle(shell);
+      const sidebarStyle = getComputedStyle(sidebar);
+      return {
+        shellHeight: shell.scrollHeight,
+        mainHeight: main.scrollHeight,
+        backgroundImage: shellStyle.backgroundImage,
+        sidebarPosition: sidebarStyle.position,
+        sidebarBottom: sidebarStyle.bottom,
+      };
+    });
+
+    expect(
+      layout.shellHeight,
+      `${tab}: shell menor que o conteúdo`,
+    ).toBeGreaterThanOrEqual(layout.mainHeight);
+    expect(layout.backgroundImage, `${tab}: faixa lateral ausente`).toContain(
+      "linear-gradient",
+    );
+    expect(layout.sidebarPosition).toBe("fixed");
+    expect(layout.sidebarBottom).toBe("0px");
+  }
+});

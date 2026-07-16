@@ -8,6 +8,19 @@ Pull Request: https://github.com/raposocampos/colmeia-planejador-financeiro/pull
 
 Estado: **não publicada; merge, staging e produção bloqueados**
 
+## Ajuste solicitado após a primeira revisão
+
+Em 16/07/2026, Lucas aprovou visualmente login e onboarding e solicitou que a
+barra lateral escura alcançasse o final das páginas em todas as abas. O shell agora
+mantém uma faixa `#231F20` por toda a altura do documento no desktop, sem alterar
+o menu móvel ou a impressão. Um teste de regressão percorre Visão geral,
+Transações, Contas e cartões, Orçamentos, Metas, Relatórios e Configurações.
+
+Evidências atualizadas:
+
+- [Dashboard com sidebar até o final](../quality/screenshots/v2/dashboard-empty.png)
+- [Configurações com sidebar até o final](../quality/screenshots/v2/profile-privacy.png)
+
 ## 1. Resumo das alterações
 
 A V2 adiciona autenticação Supabase por e-mail/senha, confirmação obrigatória,
@@ -138,7 +151,8 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 - Baseline: typecheck, lint, 16 testes e dois builds passaram; formato e E2E tinham
   falhas preexistentes registradas em `docs/quality/baseline-auth-cloud-sync-v2.md`.
-- V2: 35 testes unitários/componentes e 14 execuções E2E desktop/mobile aprovadas.
+- V2: 35 testes unitários/componentes, 15 execuções E2E aprovadas e 1 skip
+  intencional do cenário exclusivo de sidebar desktop no projeto mobile.
 - Typecheck, lint, formato, migrações/RLS, segredos e os dois builds foram aprovados.
 - A auditoria não encontrou vulnerabilidades altas ou críticas; permanece um aviso
   de baixa severidade em `@babel/core`, sem versão 7 corrigida publicada.

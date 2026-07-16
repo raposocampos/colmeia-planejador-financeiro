@@ -7,7 +7,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] TypeScript estrito sem erros.
 - [x] ESLint e Prettier aprovados.
 - [x] Unitários e componentes aprovados: 35 testes em 12 arquivos.
-- [x] E2E aprovado: 14 execuções em projetos desktop e mobile.
+- [x] E2E aprovado: 15 execuções aprovadas e 1 cenário desktop ignorado no projeto mobile.
 - [x] Console e exceções de página falham automaticamente o E2E.
 - [x] Builds Vinext/Sites e GitHub Pages aprovados localmente.
 - [x] Migração, estrutura RLS e ownership por sessão verificados estaticamente.
@@ -33,6 +33,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] Favicon usa a assinatura hexagonal da Colmeia e possui fallback PNG.
 - [x] Contraste, foco, labels, teclado e reduced motion verificados.
 - [x] Gráficos possuem alternativa textual.
+- [x] Sidebar e faixa escura cobrem toda a altura nas sete abas desktop.
 
 ## Release
 

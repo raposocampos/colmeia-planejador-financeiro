@@ -324,6 +324,13 @@ textarea {
 
 .app-shell {
   min-height: 100vh;
+  background: linear-gradient(
+    to right,
+    var(--ink) 0,
+    var(--ink) var(--sidebar),
+    var(--cream) var(--sidebar),
+    var(--cream) 100%
+  );
 }
 
 .sidebar {
@@ -1999,6 +2006,10 @@ td {
     --sidebar: 278px;
   }
 
+  .app-shell {
+    background: var(--cream);
+  }
+
   .sidebar {
     transform: translateX(-105%);
     transition: transform 220ms ease;
@@ -2342,6 +2353,10 @@ td {
 }
 
 @media print {
+  .app-shell {
+    background: white;
+  }
+
   .sidebar,
   .topbar,
   .bottom-nav,
