@@ -11,6 +11,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] Console e exceções de página falham automaticamente o E2E.
 - [x] Builds Vinext/Sites e GitHub Pages aprovados localmente.
 - [x] Migração, estrutura RLS e ownership por sessão verificados estaticamente.
+- [x] Staging real aprovado: RLS A/B/anônimo, cascata e migração idempotente.
 - [x] Auditoria de dependências sem vulnerabilidade alta ou crítica.
 - [x] Sem segredos ou .env versionado.
 
@@ -59,3 +60,8 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 
 A V2 não foi publicada em produção. A preparação de staging permanece isolada na
 branch e no GitHub Environment `staging`; o MVP público não foi alterado.
+
+Evidências integradas: dry-run
+[29535218591](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591)
+e aplicação/testes
+[29535426194](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535426194).

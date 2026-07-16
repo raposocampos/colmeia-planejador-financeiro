@@ -138,8 +138,9 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 ## 8. Limitações conhecidas
 
-- Supabase real, SMTP, Google OAuth e callbacks não foram configurados nesta branch.
-- Teste RLS integrado precisa ser repetido em Supabase local/staging autorizado.
+- Supabase de staging, confirmação de e-mail, schema e RLS real foram configurados e
+  validados; SMTP próprio, Google OAuth e callbacks hospedados continuam pendentes.
+- O build de staging existe somente como artefato com URL não roteável; não houve deploy.
 - Não há edição offline nem merge automático de conflitos.
 - Termos, Privacidade, retenção e fornecedores precisam de revisão jurídica/contratual.
 - O modo de revisão é compilado apenas pelo build local `build:review` e não é produção.
@@ -182,6 +183,11 @@ Registro de staging: em 16/07/2026, Lucas Campos declarou literalmente
 `Autorizo preparar o ambiente de staging da V2, sem merge e sem publicação em
 produção.` A autorização cobre a infraestrutura e os testes de staging isolados,
 mas não autoriza merge nem qualquer alteração no site público atual.
+
+Em seguida, Lucas autorizou explicitamente o uso do Chrome autenticado para
+configurar o Supabase e confirmou pessoalmente a rotação da senha do banco. Os runs
+29535218591 e 29535426194 aprovaram o dry-run, a migration exclusiva da V2 e os
+testes reais de isolamento/migração. Nenhum deploy foi executado.
 
 Publicação em produção continua exigindo tarefa futura e autorização explícita;
 este documento não autoriza merge nem deploy de produção por si só.

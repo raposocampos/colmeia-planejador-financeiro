@@ -17,13 +17,19 @@ Preparação autorizada em 16/07/2026, sem merge e sem produção. O GitHub Envi
 `staging` e o workflow `staging-v2.yml` isolam credenciais, dry-run, migrations,
 testes A/B/anônimo e o artefato. Antes do merge, as labels `staging-dry-run` e
 `staging-apply` controlam as duas fases no PR. O ambiente aceita somente a branch
-`feat/auth-cloud-sync-onboarding-v2`; o workflow não contém etapa de deploy.
+`feat/auth-cloud-sync-onboarding-v2` e a referência temporária
+`refs/pull/3/merge`; o workflow não contém etapa de deploy.
 
 Variáveis do GitHub Environment:
 
 - `SUPABASE_PROJECT_ID`: referência do projeto exclusivo de staging;
 - `NEXT_PUBLIC_SUPABASE_URL`: URL HTTPS do mesmo projeto;
 - `NEXT_PUBLIC_SITE_URL`: URL HTTPS que contenha `staging` e nunca a URL pública atual.
+
+Enquanto houver somente artefato técnico e nenhum host navegável, é permitido usar
+`https://colmeia-v2-staging.invalid`. O domínio `.invalid` é deliberadamente não
+roteável: não representa um deploy e precisa ser substituído, junto das URLs do
+Supabase Auth, antes de testar cadastro, confirmação, OAuth ou recuperação hospedados.
 
 Secrets do GitHub Environment:
 

@@ -66,7 +66,26 @@ produção. A preparação adicionou:
 
 Após essas mudanças, instalação congelada com pnpm 11.7.0, typecheck, lint, formato,
 38 testes, 15 execuções E2E, verificação SQL, varredura de 146 arquivos, auditoria,
-build Vinext, build Pages e `git diff --check` passaram. A validação da configuração
-foi exercitada com valores fictícios sem rede. O teste remoto não foi executado
-porque o projeto e as credenciais de staging ainda não existem; produção, Sites,
-Pages e `main` permaneceram intocados.
+build Vinext, build Pages e `git diff --check` passaram. Produção, Sites, Pages e
+`main` permaneceram intocados.
+
+## Execução integrada de staging
+
+Após autorização explícita para usar o Chrome autenticado, foi criado o projeto
+isolado `colmeia-v2-staging` em `ca-central-1`. Confirmação de e-mail ficou ativa;
+SMTP próprio, Google OAuth e callbacks hospedados permanecem pendentes. Chaves,
+token e senha rotacionada foram armazenados exclusivamente no GitHub Environment
+`staging` e não foram copiados para arquivos, commits ou comentários.
+
+O primeiro dry-run válido foi concluído no
+[run 29535218591](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591):
+todos os gates passaram, as credenciais foram aceitas e somente a migration
+`202607160001_auth_cloud_sync_v2.sql` apareceu na prévia. Aplicação e testes reais
+continuaram bloqueados nessa execução.
+
+O [run 29535426194](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535426194)
+repetiu os gates, aplicou exclusivamente a migration prevista e aprovou isolamento
+A/B, bloqueio anônimo, ownership, cascata e migração idempotente. Os três usuários
+fictícios foram removidos. Um artefato de 34 arquivos foi guardado por sete dias,
+sem deploy. A URL `.invalid` usada no build é deliberadamente não roteável e deve
+ser substituída antes do QA hospedado.

@@ -2,16 +2,19 @@
 
 ## V2 em revisão
 
-- O projeto Supabase real, SMTP, Google OAuth, região e callbacks ainda não foram configurados.
-- RLS tem verificação estática em CI; o teste remoto A/B/anônimo está preparado e
-  aguarda projeto e credenciais exclusivos de staging.
+- O projeto Supabase de staging existe em `ca-central-1`, a confirmação de e-mail
+  está ativa e a migration V2 foi aplicada. SMTP próprio, Google OAuth e callbacks
+  de uma URL hospedada ainda não foram configurados.
+- RLS passou na verificação estática e no teste remoto A/B/anônimo, incluindo
+  ownership e exclusão em cascata no projeto exclusivo de staging.
 - A V2 não edita offline nem resolve conflitos; remoto não vazio nunca recebe merge automático.
 - O IndexedDB legado é preservado e pode voltar a oferecer migração em outro login.
 - Retenção em backups, suboperadores, canal do titular e textos legais aguardam validação.
 - O bundle principal ainda gera um aviso de chunk superior a 500 kB; code splitting fica para uma otimização posterior.
 - A árvore de desenvolvimento mantém um aviso de baixa severidade em `@babel/core`; a correção indicada (`7.29.1`) ainda não foi publicada e uma mudança para Babel 8 seria incompatível nesta fase.
-- O GitHub Environment e o workflow de staging foram preparados, mas nenhum projeto
-  Supabase real, migration remota ou deploy foi executado. Produção e merge seguem bloqueados.
+- O GitHub Environment e o workflow de staging foram executados com secrets
+  protegidos. O build existe somente como artefato temporário usando uma URL
+  `.invalid`; nenhum deploy foi executado. Produção e merge seguem bloqueados.
 
 - Dados existem apenas no navegador atual; não há conta nem sincronização.
 - IndexedDB não representa criptografia completa.

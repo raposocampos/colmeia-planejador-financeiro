@@ -6,41 +6,55 @@ Escopo autorizado: preparar staging isolado, sem merge e sem publicação em pro
 
 ## Estado
 
-| Item                                       | Estado                                          |
-| ------------------------------------------ | ----------------------------------------------- |
-| Branch V2 separada da `main`               | pronto                                          |
-| GitHub Environment `staging`               | preparado sem credenciais; restrito à branch V2 |
-| Gate por labels no PR e confirmação manual | pronto                                          |
-| Supabase CLI fixada em `2.109.1`           | pronto                                          |
-| Validação contra URLs de produção          | pronto                                          |
-| Dry-run antes de migrations                | pronto                                          |
-| Teste real de RLS A/B/anônimo e cascata    | pronto para executar                            |
-| Teste real de migração idempotente         | pronto para executar                            |
-| Build armazenado como artefato por 7 dias  | pronto para executar                            |
-| Projeto Supabase exclusivo                 | aguarda criação/autenticação                    |
-| Secrets e variáveis de staging             | aguardam configuração segura                    |
-| URL hospedada de staging                   | não publicada                                   |
-| Merge e produção                           | bloqueados                                      |
+| Item                                       | Estado                                               |
+| ------------------------------------------ | ---------------------------------------------------- |
+| Branch V2 separada da `main`               | pronto                                               |
+| GitHub Environment `staging`               | credenciais protegidas; restrito à branch e ao PR #3 |
+| Gate por labels no PR e confirmação manual | pronto                                               |
+| Supabase CLI fixada em `2.109.1`           | pronto                                               |
+| Validação contra URLs de produção          | pronto                                               |
+| Dry-run antes de migrations                | pronto                                               |
+| Teste real de RLS A/B/anônimo e cascata    | aprovado                                             |
+| Teste real de migração idempotente         | aprovado                                             |
+| Build armazenado como artefato por 7 dias  | aprovado                                             |
+| Projeto Supabase exclusivo                 | criado em `ca-central-1`                             |
+| Secrets e variáveis de staging             | configurados fora do repositório                     |
+| Migration remota V2                        | aplicada somente no projeto de staging               |
+| URL hospedada de staging                   | não publicada                                        |
+| Merge e produção                           | bloqueados                                           |
 
-## Como desbloquear a execução remota
+## Execução remota concluída
 
-1. Criar no painel do Supabase um projeto exclusivo, sem dados reais.
-2. Configurar confirmação de e-mail, SMTP de teste, Google OAuth de teste e somente
-   callbacks do host de staging.
-3. No GitHub, abrir **Settings → Environments → staging** e cadastrar as variáveis e
-   secrets descritas em `environment-setup.md`. Não copiar credenciais para issues,
-   PRs, commits, logs ou mensagens.
-4. No PR #3, aplicar `staging-dry-run`, aguardar o workflow **Prepare V2 staging** e
-   revisar o dry-run. Remover a label ao final.
-5. Aplicar `staging-apply` somente após o dry-run aprovado. Essa segunda execução
-   aplica o schema e roda os testes reais; remover a label ao final.
+O projeto `colmeia-v2-staging` foi criado exclusivamente para a V2. A confirmação
+de e-mail permanece obrigatória, o provedor de e-mail está ativo e os demais
+provedores permanecem desativados até existirem credenciais próprias de staging.
+
+O GitHub Environment guarda quatro secrets e três variáveis sem expor valores no
+repositório. Como ainda não existe hospedagem de staging, `NEXT_PUBLIC_SITE_URL` usa
+temporariamente o domínio reservado e não roteável
+`https://colmeia-v2-staging.invalid`. Esse valor serve somente para validar e gerar
+o artefato; deve ser substituído antes de qualquer teste de autenticação hospedado.
+
+O dry-run aprovado listou exclusivamente
+`202607160001_auth_cloud_sync_v2.sql`. A execução seguinte aplicou essa migration e
+aprovou isolamento A/B, bloqueio anônimo, ownership, exclusão em cascata e segunda
+execução idempotente da migração legada. Os três usuários fictícios foram removidos
+ao final e o painel de Auth voltou ao estado sem usuários.
+
+Evidências do GitHub Actions:
+
+- [dry-run aprovado](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591);
+- [migration e testes integrados aprovados](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535426194);
+- artefato técnico `colmeia-v2-staging-8bf634f407208ac8a90611e46ab170c9cd87faa2`,
+  retido por sete dias e sem deploy.
 
 Enquanto o workflow não está na branch padrão, `workflow_dispatch` não aparece na
 interface. As labels permitem executar o mesmo pipeline no PR sem merge.
 
 O workflow gera somente um artefato técnico. Hospedagem de staging exige uma URL
 separada que contenha `staging`; o projeto Sites público atual e o GitHub Pages não
-podem ser reutilizados para esse fim.
+podem ser reutilizados para esse fim. SMTP próprio, Google OAuth e callbacks reais
+também permanecem pendentes até essa URL existir.
 
 ## Evidência esperada
 
