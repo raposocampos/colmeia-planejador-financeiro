@@ -1,5 +1,16 @@
 # Limitações conhecidas
 
+## V2 em revisão
+
+- O projeto Supabase real, SMTP, Google OAuth, região e callbacks ainda não foram configurados.
+- RLS tem verificação estática em CI; o teste de integração deve ser repetido no projeto local/staging autorizado.
+- A V2 não edita offline nem resolve conflitos; remoto não vazio nunca recebe merge automático.
+- O IndexedDB legado é preservado e pode voltar a oferecer migração em outro login.
+- Retenção em backups, suboperadores, canal do titular e textos legais aguardam validação.
+- O bundle principal ainda gera um aviso de chunk superior a 500 kB; code splitting fica para uma otimização posterior.
+- A árvore de desenvolvimento mantém um aviso de baixa severidade em `@babel/core`; a correção indicada (`7.29.1`) ainda não foi publicada e uma mudança para Babel 8 seria incompatível nesta fase.
+- Nenhum staging, produção, merge ou deploy foi executado nesta branch.
+
 - Dados existem apenas no navegador atual; não há conta nem sincronização.
 - IndexedDB não representa criptografia completa.
 - Recorrências são lembretes declarativos e não geram lançamentos.
@@ -12,7 +23,3 @@
 - Paginação/virtualização não é necessária para o volume esperado do MVP.
 - Trap de foco em modal pode ser refinado; Escape, foco visível e labels existem.
 - Instalação PWA depende do suporte do navegador e de HTTPS na publicação.
-- Os cenários Playwright estão escritos, mas não rodaram neste ambiente por bloqueio
-  da URL local; a validação equivalente foi feita manualmente na URL HTTPS publicada.
-- GitHub Pages depende da criação do repositório público e da autenticação do GitHub
-  CLI, indisponível neste ambiente no momento da entrega.

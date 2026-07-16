@@ -1,0 +1,4 @@
+interface:
+  display_name: "Colmeia Auth Security"
+  short_description: "Audita autenticação, sessões e RLS"
+  default_prompt: "Use $colmeia-auth-security para auditar autenticação, sessões, RLS e exposição de segredos da V2."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Colmeia Data Migration"
+  short_description: "Valida migração segura do IndexedDB"
+  default_prompt: "Use $colmeia-data-migration para validar backup, idempotência e integridade da migração local para a nuvem."

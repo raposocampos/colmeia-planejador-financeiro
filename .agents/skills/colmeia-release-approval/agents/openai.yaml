@@ -1,0 +1,4 @@
+interface:
+  display_name: "Colmeia Release Approval"
+  short_description: "Bloqueia release sem aprovação explícita"
+  default_prompt: "Use $colmeia-release-approval para verificar os gates e impedir produção sem aprovação explícita de Lucas."

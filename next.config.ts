@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const isGitHubPages = process.env.DEPLOY_TARGET === "github-pages";
+const isReviewBuild = process.env.DEPLOY_TARGET === "review";
 const repositoryOwner =
   process.env.GITHUB_REPOSITORY_OWNER ??
   process.env.GITHUB_REPOSITORY?.split("/")[0] ??
@@ -14,7 +15,7 @@ const siteUrl = isGitHubPages
     "https://colmeia-planejador-financeiro.lucascampos.chatgpt.site");
 
 const nextConfig: NextConfig = {
-  output: isGitHubPages ? "export" : undefined,
+  output: isGitHubPages || isReviewBuild ? "export" : undefined,
   trailingSlash: true,
   basePath,
   assetPrefix: basePath || undefined,

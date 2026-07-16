@@ -32,6 +32,12 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm test
+      - run: pnpm verify:migrations
+      - run: pnpm check:secrets
+      - run: pnpm audit:deps
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - run: pnpm build
       - run: pnpm build:pages
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'

@@ -13,6 +13,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "tmp/**",
+    "playwright-report/**",
+    "test-results/**",
+    ".wrangler/**",
     "next-env.d.ts",
   ]),
 ]);

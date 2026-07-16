@@ -9,6 +9,7 @@ arquitetural registrada.
 ## Mapa do repositório
 
 - app/: interface React, componentes, domínio e persistência.
+- supabase/: schema PostgreSQL, RLS, RPCs e testes de isolamento.
 - public/: manifest, service worker e assets públicos.
 - tests/ e e2e/: testes unitários, de componentes e ponta a ponta.
 - docs/product/: escopo, jornadas e critérios de aceitação.
@@ -27,6 +28,8 @@ arquitetural registrada.
 - pnpm format:write: formatar o repositório.
 - pnpm test: executar testes unitários e de componentes.
 - pnpm test:e2e: executar fluxos Playwright.
+- pnpm verify:migrations: verificar schema, RLS e RPCs.
+- pnpm check:secrets: bloquear arquivos de ambiente e credenciais.
 - pnpm build: gerar o pacote para Sites.
 - pnpm build:pages: gerar out/ para GitHub Pages.
 
@@ -37,6 +40,9 @@ arquitetural registrada.
 - Separar IndexedDB da interface por app/lib/db.ts.
 - Validar importações antes de persistir e nunca substituir silenciosamente.
 - Não introduzir dados pessoais reais, tokens, chaves ou arquivos .env.
+- Nunca aceitar `user_id` da interface; derive o proprietário da sessão e valide por RLS.
+- Preservar o IndexedDB legado até decisão explícita da pessoa.
+- Não publicar a V2 sem aprovação explícita de Lucas Campos.
 - Não incorporar fontes ou assets proprietários sem licença fornecida.
 - Usar “Colmeia Educação Financeira” como nome do produto.
 - Usar hexágonos como assinatura, não como formato universal.

@@ -1,23 +1,29 @@
-# Checklist de QA
+# Checklist de QA — autenticação e nuvem V2
+
+Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 
 ## Engenharia
 
 - [x] TypeScript estrito sem erros.
 - [x] ESLint e Prettier aprovados.
-- [x] Unitários e componentes aprovados: 16 testes em 4 arquivos.
-- [ ] E2E desktop e mobile aprovados.
-- [x] QA manual na URL publicada em desktop e mobile.
-- [x] Builds Sites e GitHub Pages aprovados localmente.
+- [x] Unitários e componentes aprovados: 35 testes em 12 arquivos.
+- [x] E2E aprovado: 14 execuções em projetos desktop e mobile.
+- [x] Console e exceções de página falham automaticamente o E2E.
+- [x] Builds Vinext/Sites e GitHub Pages aprovados localmente.
+- [x] Migração, estrutura RLS e ownership por sessão verificados estaticamente.
+- [x] Auditoria de dependências sem vulnerabilidade alta ou crítica.
 - [x] Sem segredos ou .env versionado.
 
 ## Produto
 
-- [x] Onboarding completo, pular e reiniciar.
+- [x] Login, cadastro, confirmação simulada, recuperação e sessão testados.
+- [x] Onboarding V2 completo, pular e reiniciar.
 - [x] CRUD de conta, cartão, transação, orçamento e meta.
 - [x] Dashboard reage e persistência sobrevive à recarga.
 - [x] Filtros e relatórios coerentes.
 - [x] JSON/CSV exportam; importações mostram prévia.
-- [x] Dados demo são removíveis.
+- [x] Exemplos do onboarding permanecem somente em memória.
+- [x] Migração mostra contagens, backup e impede merge silencioso.
 
 ## Marca e acessibilidade
 
@@ -28,21 +34,26 @@
 - [x] Contraste, foco, labels, teclado e reduced motion verificados.
 - [x] Gráficos possuem alternativa textual.
 
-## Publicação
+## Release
 
-- [x] GitHub Actions aprovado.
-- [x] GitHub Pages carrega JS, CSS, manifest, favicon e service worker.
-- [x] Sites público publicado e aberto.
-- [x] Console publicado sem erro ou aviso relevante.
+- [x] GitHub Actions atualizado para os gates da V2.
+- [x] Branch de revisão isolada da `main`.
+- [ ] Merge autorizado por Lucas.
+- [ ] Staging autorizado por Lucas.
+- [ ] Produção autorizada por Lucas.
 
 ## Evidências
 
-- `onboarding-desktop.png`
-- `dashboard-desktop.png`
-- `accounts-mobile.png`
+- `docs/quality/screenshots/v2/login-desktop.png`
+- `docs/quality/screenshots/v2/login-mobile.png`
+- `docs/quality/screenshots/v2/signup-desktop.png`
+- `docs/quality/screenshots/v2/signup-mobile.png`
+- `docs/quality/screenshots/v2/onboarding-desktop.png`
+- `docs/quality/screenshots/v2/onboarding-mobile.png`
+- `docs/quality/screenshots/v2/migration-data.png`
+- `docs/quality/screenshots/v2/dashboard-empty.png`
+- `docs/quality/screenshots/v2/dashboard-migrated.png`
+- `docs/quality/screenshots/v2/profile-privacy.png`
 
-O E2E Playwright está implementado, mas não foi executado neste ambiente porque a
-política do navegador bloqueou a URL local. Os mesmos fluxos críticos foram
-percorridos na publicação HTTPS: onboarding, exclusão reforçada, criação de
-transação, atualização do dashboard, recarga com persistência e responsividade.
-O gate foi tentado novamente na alteração do favicon e encontrou a mesma restrição.
+A V2 não foi publicada. As evidências foram capturadas no build local exclusivo de
+revisão, sem credenciais reais e sem alterar o MVP público.

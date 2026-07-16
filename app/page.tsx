@@ -1,5 +1,5 @@
-import PlannerApp from "./PlannerApp";
+import AppGate from "./AppGate";
 
 export default function Home() {
-  return <PlannerApp />;
+  return <AppGate />;
 }

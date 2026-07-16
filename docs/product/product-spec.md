@@ -39,3 +39,15 @@ OFX, recomendação de investimentos, notificações remotas e backend.
 - Entender receitas, despesas e resultado sem abrir relatório.
 - Recuperar dados por backup sem substituição silenciosa.
 - Completar fluxos críticos com teclado e em viewport de 390 px.
+
+## Evolução V2 em revisão
+
+- conta por e-mail/senha com confirmação obrigatória, Google OAuth e recuperação;
+- “Manter-me conectado” opcional e desmarcado por padrão;
+- Supabase/PostgreSQL como fonte oficial, cache local por usuário e leitura offline;
+- migração segura do IndexedDB legado, sem merge automático com nuvem não vazia;
+- onboarding de cinco etapas uma vez por conta, com exemplos somente em memória;
+- perfil, logout, exportação, exclusão, Termos e Privacidade.
+
+Não fazem parte desta V2: aposentadoria, família, filhos, educação, Open Finance,
+IA financeira, compartilhamento entre casais, pagamentos e assinaturas.

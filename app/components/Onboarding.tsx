@@ -1,121 +1,128 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   BarChart3,
+  Database,
   Landmark,
-  Sparkles,
+  ReceiptText,
   Target,
 } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 
-const steps = [
+export const onboardingSteps = [
   {
-    title: "Contas e cartões em um só lugar",
-    description: "Cadastre onde seu dinheiro entra, fica guardado ou é utilizado.",
-    icon: Landmark,
-  },
-  {
-    title: "Registre receitas e despesas",
+    title: "Comece pela visão geral",
     description:
-      "Acompanhe seus gastos e entradas com valores em reais e datas do seu jeito.",
-    icon: Sparkles,
-  },
-  {
-    title: "Entenda o destino de cada centavo",
-    description:
-      "Categorias e relatórios transformam movimentações em decisões mais claras.",
+      "Receitas, despesas e o resultado do mês aparecem juntos para você enxergar o momento atual com clareza.",
+    detail: "Os valores abaixo são apenas uma apresentação e não serão salvos.",
     icon: BarChart3,
+    preview: [
+      "Receitas  R$ 4.800,00",
+      "Despesas  R$ 3.120,00",
+      "Resultado  R$ 1.680,00",
+    ],
   },
   {
-    title: "Transforme organização em hábito",
-    description: "Acompanhe orçamentos, metas e sua evolução sem julgamentos.",
-    icon: Target,
+    title: "Registre suas transações",
+    description:
+      "Adicione receitas e despesas, depois edite ou exclua quando precisar. Você continua no controle.",
+    detail:
+      "Descrições e valores de exemplo existem somente enquanto este tour está aberto.",
+    icon: ReceiptText,
+    preview: ["Salário de exemplo  + R$ 4.800,00", "Mercado de exemplo  − R$ 286,40"],
   },
-];
+  {
+    title: "Organize contas e cartões",
+    description:
+      "Cadastre onde o dinheiro fica e acompanhe saldos, faturas, limites usados e disponíveis.",
+    detail: "Nenhuma conta é criada automaticamente ao concluir.",
+    icon: Landmark,
+    preview: ["Conta de exemplo", "Cartão de exemplo  32% do limite"],
+  },
+  {
+    title: "Planeje com orçamentos e metas",
+    description:
+      "Defina referências mensais e acompanhe objetivos no seu ritmo, com mensagens educativas e sem julgamento.",
+    detail: "A Colmeia não transforma esses exemplos em recomendação financeira.",
+    icon: Target,
+    preview: ["Alimentação  68% utilizado", "Reserva de exemplo  24% concluída"],
+  },
+  {
+    title: "Seus dados, suas escolhas",
+    description:
+      "A nuvem sincroniza seus registros entre dispositivos. Você também pode exportar JSON e CSV quando quiser.",
+    detail:
+      "Em dispositivos compartilhados, saia da conta e evite manter a sessão conectada.",
+    icon: Database,
+    preview: ["Sincronização protegida por conta", "Backup JSON e exportação CSV"],
+  },
+] as const;
 
 interface OnboardingProps {
-  onFinish: (values: {
-    accountName: string;
-    balance: string;
-    demo: boolean;
-  }) => Promise<void>;
-  onSkip: () => Promise<void>;
+  onFinish: () => Promise<void> | void;
+  onSkip?: () => Promise<void> | void;
+  replay?: boolean;
 }
 
-export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
+export function Onboarding({ onFinish, onSkip, replay = false }: OnboardingProps) {
   const [step, setStep] = useState(0);
-  const [accountName, setAccountName] = useState("Conta principal");
-  const [balance, setBalance] = useState("");
-  const [demo, setDemo] = useState(true);
   const [saving, setSaving] = useState(false);
-  const StepIcon = steps[step].icon;
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const current = onboardingSteps[step];
+  const StepIcon = current.icon;
+
+  useEffect(() => titleRef.current?.focus(), [step]);
 
   const finish = async () => {
     setSaving(true);
     try {
-      await onFinish({ accountName, balance, demo });
+      await onFinish();
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <main className="onboarding-shell">
+    <main className="onboarding-shell" data-testid="onboarding-v2">
       <header className="onboarding-header">
         <BrandMark />
-        <button className="text-button" type="button" onClick={onSkip}>
-          Pular por agora
-        </button>
+        {onSkip && (
+          <button className="text-button" type="button" onClick={onSkip}>
+            {replay ? "Fechar tour" : "Concluir por agora"}
+          </button>
+        )}
       </header>
       <section className="onboarding-card" aria-labelledby="onboarding-title">
-        <div className="onboarding-art" aria-hidden="true">
-          <span className="feature-hex">
+        <div
+          className="onboarding-art onboarding-art--preview"
+          aria-label="Dados fictícios de demonstração"
+        >
+          <span className="feature-hex" aria-hidden="true">
             <StepIcon size={34} strokeWidth={1.8} />
           </span>
-          <span className="floating-cell floating-cell--one" />
-          <span className="floating-cell floating-cell--two" />
-          <span className="floating-cell floating-cell--three" />
+          <div className="tour-preview">
+            {current.preview.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </div>
         </div>
         <div className="onboarding-copy">
-          <p className="eyebrow">PASSO {step + 1} DE 4</p>
-          <h1 id="onboarding-title">{steps[step].title}</h1>
-          <p>{steps[step].description}</p>
-          {step === 3 && (
-            <div className="onboarding-fields">
-              <label>
-                Nome da primeira conta
-                <input
-                  value={accountName}
-                  onChange={(event) => setAccountName(event.target.value)}
-                  placeholder="Ex.: Conta principal"
-                />
-              </label>
-              <label>
-                Saldo inicial
-                <input
-                  value={balance}
-                  onChange={(event) => setBalance(event.target.value)}
-                  inputMode="decimal"
-                  placeholder="R$ 0,00"
-                />
-              </label>
-              <label className="check-row">
-                <input
-                  type="checkbox"
-                  checked={demo}
-                  onChange={(event) => setDemo(event.target.checked)}
-                />
-                <span>
-                  Usar dados demonstrativos fictícios para conhecer os recursos
-                </span>
-              </label>
-            </div>
-          )}
-          <div className="step-dots" aria-label={"Etapa " + (step + 1) + " de 4"}>
-            {steps.map((item, index) => (
+          <p className="eyebrow">
+            ETAPA {step + 1} DE {onboardingSteps.length}
+          </p>
+          <h1 id="onboarding-title" ref={titleRef} tabIndex={-1}>
+            {current.title}
+          </h1>
+          <p>{current.description}</p>
+          <p className="tour-detail">{current.detail}</p>
+          <div
+            className="step-dots"
+            aria-label={`Etapa ${step + 1} de ${onboardingSteps.length}`}
+          >
+            {onboardingSteps.map((item, index) => (
               <span
                 key={item.title}
                 className={index === step ? "active" : ""}
@@ -128,15 +135,15 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
               type="button"
               className="button button--secondary"
               disabled={step === 0}
-              onClick={() => setStep((current) => current - 1)}
+              onClick={() => setStep((value) => value - 1)}
             >
               <ArrowLeft size={18} /> Voltar
             </button>
-            {step < 3 ? (
+            {step < onboardingSteps.length - 1 ? (
               <button
                 type="button"
                 className="button"
-                onClick={() => setStep((current) => current + 1)}
+                onClick={() => setStep((value) => value + 1)}
               >
                 Continuar <ArrowRight size={18} />
               </button>
@@ -147,7 +154,7 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
                 disabled={saving}
                 onClick={finish}
               >
-                {saving ? "Preparando..." : "Começar a organizar"}
+                {saving ? "Finalizando..." : "Ir para meu painel"}
                 <ArrowRight size={18} />
               </button>
             )}
@@ -155,7 +162,7 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
         </div>
       </section>
       <p className="onboarding-note">
-        Seus dados ficam neste navegador. Você poderá exportar um backup quando quiser.
+        Os exemplos deste tour não são gravados no navegador nem na nuvem.
       </p>
     </main>
   );

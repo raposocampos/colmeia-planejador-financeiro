@@ -4,12 +4,11 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
   retries: 1,
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: [["list"]],
   use: {
     baseURL: "http://127.0.0.1:3000",
-    trace: "retain-on-failure",
+    trace: "off",
     screenshot: "only-on-failure",
-    channel: "chrome",
   },
   projects: [
     {
@@ -18,11 +17,11 @@ export default defineConfig({
     },
     {
       name: "mobile",
-      use: { ...devices["Pixel 7"], channel: "chrome" },
+      use: { ...devices["Pixel 7"] },
     },
   ],
   webServer: {
-    command: "node scripts/run-vinext.mjs dev",
+    command: "node scripts/run-review-server.mjs",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: true,
     timeout: 120000,

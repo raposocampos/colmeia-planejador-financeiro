@@ -39,3 +39,18 @@ Nome, alvo e atual em centavos, data desejada e conta opcionais, cor e ícone.
 Registro único settings guarda onboarding, demonstração, moeda, locale, fuso e
 versão. BackupMetadata identifica app, versão e data. BackupData contém snapshot
 completo validado por Zod antes de importar.
+
+## Persistência remota V2
+
+`profiles` associa nome e `onboarding_completed_at` ao usuário do Auth.
+`user_settings` guarda moeda, locale, fuso e versão do schema. `data_migrations`
+guarda somente ID idempotente, versão, origem, contagens e data — nunca conteúdo
+financeiro.
+
+Accounts, credit_cards, categories, transactions, budgets e goals usam chave
+primária composta `(user_id, id)`. Relacionamentos também incluem `user_id`, o que
+impede referência entre proprietários. O cliente não envia livremente `user_id`;
+o default e as policies usam `auth.uid()`. Valores continuam em `bigint` de centavos.
+
+O cache usa banco `colmeia-financial-planner-cache-{userId}`. O legado permanece em
+`colmeia-financial-planner`, isolado do cache e da fonte oficial.
