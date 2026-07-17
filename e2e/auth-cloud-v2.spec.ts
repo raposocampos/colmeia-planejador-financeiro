@@ -189,3 +189,71 @@ test("sidebar permanece fixa e navegável em todas as abas desktop", async ({
     expect(fixedTop, `${tab}: sidebar rolou com o conteúdo`).toBe(0);
   }
 });
+
+test("salva orçamento e usa apenas categorias configuradas", async ({ page }) => {
+  await page.goto("/?review=budgets");
+  await page.getByRole("button", { name: "Criar orçamento" }).first().click();
+  const category = page.getByRole("combobox", { name: "Categoria" });
+  await expect(category).toHaveValue("moradia");
+  await expect(category.getByRole("option", { name: "Sem categoria" })).toHaveCount(0);
+  await page.getByLabel("Limite planejado").fill("500");
+  await page.getByTestId("modal-save").click();
+  await expect(page.getByRole("heading", { name: "Moradia" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Transações", exact: true }).last().click();
+  await page.getByRole("button", { name: "Nova transação" }).first().click();
+  await expect(
+    page.getByRole("combobox", { name: "Categoria" }).getByRole("option", {
+      name: "Sem categoria",
+    }),
+  ).toHaveCount(0);
+});
+
+test("reordena categorias pelo teclado e mantém a lista configurada", async ({
+  page,
+}) => {
+  await page.goto("/?review=settings");
+  const moveHousing = page.getByRole("button", { name: /Mover Moradia/ });
+  await moveHousing.focus();
+  await moveHousing.press("End");
+  await expect(page.getByText("Ordem das categorias atualizada.")).toBeVisible();
+
+  const pills = page.locator(".category-pills > span");
+  await expect(pills.first()).toContainText("Alimentação");
+  await expect(pills.last()).toContainText("Moradia");
+
+  await page.getByRole("button", { name: "Transações", exact: true }).last().click();
+  await page.getByRole("button", { name: "Nova transação" }).first().click();
+  const options = page.getByRole("combobox", { name: "Categoria" }).locator("option");
+  await expect(options.first()).toHaveText("Alimentação");
+  await expect(options).toHaveCount(14);
+});
+
+test("arrasta uma categoria para uma nova posição", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "gesto validado no viewport desktop");
+  await page.goto("/?review=settings");
+  const source = page.getByRole("button", { name: /Mover Moradia/ });
+  const target = page.getByRole("button", { name: /Mover Transporte/ });
+  await source.scrollIntoViewIfNeeded();
+  const sourceBox = await source.boundingBox();
+  const targetBox = await target.boundingBox();
+  if (!sourceBox || !targetBox) throw new Error("Marcadores de categoria ausentes");
+
+  await page.mouse.move(
+    sourceBox.x + sourceBox.width / 2,
+    sourceBox.y + sourceBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    targetBox.x + targetBox.width / 2,
+    targetBox.y + targetBox.height / 2,
+    { steps: 8 },
+  );
+  await page.mouse.up();
+
+  await expect(page.getByText("Ordem das categorias atualizada.")).toBeVisible();
+  const pills = page.locator(".category-pills > span");
+  await expect(pills.nth(0)).toContainText("Alimentação");
+  await expect(pills.nth(1)).toContainText("Transporte");
+  await expect(pills.nth(2)).toContainText("Moradia");
+});

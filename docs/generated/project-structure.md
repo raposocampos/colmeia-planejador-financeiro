@@ -14,7 +14,7 @@
 - .github/workflows/pages.yml: CI e publicação.
 - app/PlannerApp.tsx: shell e telas do planejador.
 - app/components/: BrandMark, EntryModal, Onboarding e ProgressBar.
-- app/lib/: tipos, cálculos, Dexie, backup e demo.
+- app/lib/: tipos, cálculos, ordem de categorias, Dexie, backup e demo.
 - public/: PWA, service worker e Open Graph.
 - scripts/: wrappers multiplataforma de build.
 - tests/: unitários e componentes.

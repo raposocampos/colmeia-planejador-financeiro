@@ -41,6 +41,7 @@ export interface Category extends BaseRecord {
   color: string;
   icon: string;
   archived: boolean;
+  sortOrder?: number;
 }
 
 export interface Transaction extends BaseRecord {

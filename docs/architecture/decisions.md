@@ -31,3 +31,10 @@ melhorar performance e manter leitura acessível.
 
 Decisão: registrar a frequência sem gerar lançamentos automáticos. Motivo:
 impedir duplicações silenciosas no MVP.
+
+## ADR-007 — Ordem de categorias opcional e por proprietário
+
+Decisão: `categories.sort_order` aceita `null` para registros antigos; uma RPC
+`security invoker` valida a lista completa e deriva o proprietário de `auth.uid()`.
+Motivo: permitir personalização sem backfill destrutivo, sem aceitar `user_id` da
+interface e sem invalidar backups anteriores.

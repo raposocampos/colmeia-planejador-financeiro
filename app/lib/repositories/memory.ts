@@ -9,6 +9,7 @@ import {
   type PlannerState,
   type Transaction,
 } from "../types";
+import { applyCategoryOrder } from "../categories";
 import type { PlannerRepository, PlannerTable } from "./types";
 
 export class MemoryPlannerRepository implements PlannerRepository {
@@ -42,6 +43,9 @@ export class MemoryPlannerRepository implements PlannerRepository {
   }
   async saveCategory(record: Category) {
     this.put("categories", record);
+  }
+  async reorderCategories(categoryIds: string[]) {
+    this.state.categories = applyCategoryOrder(this.state.categories, categoryIds);
   }
   async saveSettings(settings: AppSettings) {
     this.state.settings = settings;

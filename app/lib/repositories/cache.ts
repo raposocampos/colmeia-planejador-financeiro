@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
+import { applyCategoryOrder } from "../categories";
 import {
   initialSettings,
   type Account,
@@ -76,6 +77,14 @@ export class AuthenticatedCacheRepository implements PlannerRepository {
   saveGoal = (record: Goal) => this.database.goals.put(record).then(() => undefined);
   saveCategory = (record: Category) =>
     this.database.categories.put(record).then(() => undefined);
+  async reorderCategories(categoryIds: string[]): Promise<void> {
+    await this.database.transaction("rw", this.database.categories, async () => {
+      const categories = await this.database.categories.toArray();
+      await this.database.categories.bulkPut(
+        applyCategoryOrder(categories, categoryIds),
+      );
+    });
+  }
   saveSettings = (settings: AppSettings) =>
     this.database.settings.put(settings).then(() => undefined);
   removeRecord = (table: PlannerTable, id: string) =>

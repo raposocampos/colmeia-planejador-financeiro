@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { X } from "lucide-react";
 import { currentMonth, formatBRL } from "../lib/calculations";
@@ -81,6 +81,11 @@ export function EntryModal({
   onSubmit,
 }: EntryModalProps) {
   const item = modal.item;
+  const activeCategories = categories.filter((category) => !category.archived);
+  const budgetCategories = activeCategories.filter(
+    (category) => category.kind !== "income",
+  );
+  const [submitError, setSubmitError] = useState("");
   const { register, handleSubmit, formState } = useForm<FormValues>({
     defaultValues: {
       name: recordValue(item, "name"),
@@ -94,7 +99,13 @@ export function EntryModal({
           ? formatBRL(Number(item.amountCents)).replace("R$", "").trim()
           : "",
       date: recordValue(item, "date") || new Date().toISOString().slice(0, 10),
-      categoryId: recordValue(item, "categoryId"),
+      categoryId:
+        recordValue(item, "categoryId") ||
+        (modal.kind === "transaction"
+          ? (activeCategories[0]?.id ?? "")
+          : modal.kind === "budget"
+            ? (budgetCategories[0]?.id ?? "")
+            : ""),
       accountId: recordValue(item, "accountId"),
       destinationAccountId: recordValue(item, "destinationAccountId"),
       creditCardId: recordValue(item, "creditCardId"),
@@ -136,7 +147,14 @@ export function EntryModal({
   }, [onClose]);
 
   const submit = handleSubmit(async (values) => {
-    await onSubmit(values);
+    setSubmitError("");
+    try {
+      await onSubmit(values);
+    } catch {
+      setSubmitError(
+        "Não foi possível salvar. Verifique sua conexão e tente novamente.",
+      );
+    }
   });
 
   return (
@@ -210,15 +228,18 @@ export function EntryModal({
               <div className="form-grid">
                 <label>
                   Categoria
-                  <select {...register("categoryId")}>
-                    <option value="">Sem categoria</option>
-                    {categories
-                      .filter((category) => !category.archived)
-                      .map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
+                  <select
+                    {...register("categoryId", { required: true })}
+                    disabled={!activeCategories.length}
+                  >
+                    {!activeCategories.length && (
+                      <option value="">Cadastre uma categoria em Configurações</option>
+                    )}
+                    {activeCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
@@ -369,17 +390,18 @@ export function EntryModal({
             <>
               <label>
                 Categoria
-                <select {...register("categoryId", { required: true })}>
-                  <option value="">Selecione</option>
-                  {categories
-                    .filter(
-                      (category) => category.kind !== "income" && !category.archived,
-                    )
-                    .map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
+                <select
+                  {...register("categoryId", { required: true })}
+                  disabled={!budgetCategories.length}
+                >
+                  {!budgetCategories.length && (
+                    <option value="">Cadastre uma categoria de despesa</option>
+                  )}
+                  {budgetCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
               </label>
               <div className="form-grid">
@@ -456,6 +478,12 @@ export function EntryModal({
                 </label>
               </div>
             </>
+          )}
+
+          {submitError && (
+            <p className="form-error" role="alert">
+              {submitError}
+            </p>
           )}
 
           <footer className="modal-actions">

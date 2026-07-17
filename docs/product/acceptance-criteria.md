@@ -22,6 +22,11 @@
 
 - Dashboard reage a transações pagas do mês.
 - Orçamentos exibem utilizado, restante, percentual e estado.
+- Salvar um orçamento com mês `YYYY-MM` persiste no Supabase e atualiza a tela.
+- Formulários exibem somente categorias ativas configuradas, sem a opção
+  artificial “Sem categoria”.
+- Categorias podem ser reordenadas por arrastar e soltar ou por teclado; a ordem
+  é preservada no banco remoto, no cache e nos backups.
 - Metas exibem percentual, restante e estimativa quando há data.
 - Relatórios respeitam os filtros combinados.
 

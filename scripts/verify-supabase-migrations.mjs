@@ -67,6 +67,38 @@ if (
   failures.push("Exclusão da conta não está limitada ao papel autenticado.");
 if (!/default auth\.uid\(\)/i.test(sql))
   failures.push("Inserções não derivam o proprietário da sessão autenticada.");
+if (
+  !/add constraint budgets_month_check[\s\S]*?month\s*~\s*'\^\[0-9\]\{4\}-\(0\[1-9\]\|1\[0-2\]\)\$'/i.test(
+    sql,
+  )
+)
+  failures.push("Restrição corrigida de mês do orçamento ausente.");
+if (
+  !/alter table public\.categories[\s\S]*?add column if not exists sort_order integer/i.test(
+    sql,
+  )
+)
+  failures.push("Ordenação persistente de categorias ausente.");
+if (!/function public\.reorder_categories\(ordered_ids text\[\]\)/i.test(sql))
+  failures.push("RPC de ordenação de categorias ausente.");
+if (
+  !/function public\.reorder_categories[\s\S]*?owner_id uuid := \(select auth\.uid\(\)\)/i.test(
+    sql,
+  )
+)
+  failures.push("RPC de categorias não deriva o proprietário da sessão.");
+if (
+  !/revoke all on function public\.reorder_categories\(text\[\]\) from public, anon/i.test(
+    sql,
+  )
+)
+  failures.push("RPC de categorias está acessível a anônimos.");
+if (
+  !/grant execute on function public\.reorder_categories\(text\[\]\) to authenticated/i.test(
+    sql,
+  )
+)
+  failures.push("RPC de categorias não foi concedida ao papel autenticado.");
 
 if (failures.length) {
   console.error(failures.join("\n"));

@@ -20,13 +20,14 @@ export const defaultCategories: Category[] = [
   ["salario", "Salário", "income", "#47704E", "carteira"],
   ["renda-extra", "Renda extra", "income", "#6D8C54", "mais"],
   ["outros", "Outros", "both", "#7C746A", "círculo"],
-].map(([id, name, kind, color, icon]) => ({
+].map(([id, name, kind, color, icon], sortOrder) => ({
   id,
   name,
   kind: kind as Category["kind"],
   color,
   icon,
   archived: false,
+  sortOrder,
   createdAt: now,
   updatedAt: now,
 }));

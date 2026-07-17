@@ -20,6 +20,10 @@ proprietário foi criada para comprovar a entrega de recuperação; seu endereç
 - Segredos: .env ignorado e nenhuma credencial no código.
 - Identidade e dados remotos: RLS por operação, `auth.uid()` no banco e chaves
   estrangeiras compostas impedem leitura ou referência entre usuários.
+- Ordem de categorias: a RPC recebe apenas IDs, exige a lista completa, rejeita
+  duplicatas e deriva o proprietário da sessão; o cliente nunca envia `user_id`.
+- Evolução de schema: `sort_order` é opcional e a correção de `month` altera
+  somente constraints, sem backfill ou exclusão de registros financeiros.
 - Migração: backup recomendado, validação de referências, RPC transacional,
   idempotência e bloqueio quando o remoto não está vazio.
 - Staging: chaves administrativas ficam no GitHub Environment e não entram no

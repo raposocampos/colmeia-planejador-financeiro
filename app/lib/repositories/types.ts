@@ -23,6 +23,7 @@ export interface PlannerRepository {
   saveBudget(record: Budget): Promise<void>;
   saveGoal(record: Goal): Promise<void>;
   saveCategory(record: Category): Promise<void>;
+  reorderCategories(categoryIds: string[]): Promise<void>;
   saveSettings(settings: AppSettings): Promise<void>;
   removeRecord(table: PlannerTable, id: string): Promise<void>;
   replaceState(state: PlannerState): Promise<void>;
