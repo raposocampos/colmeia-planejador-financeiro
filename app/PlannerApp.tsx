@@ -28,6 +28,8 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  LogOut,
+  UserRound,
   Tag,
   Trash2,
   TrendingDown,
@@ -39,7 +41,6 @@ import {
 } from "lucide-react";
 import { BrandMark } from "./components/BrandMark";
 import { EntryModal, type FormValues, type ModalState } from "./components/EntryModal";
-import { Onboarding } from "./components/Onboarding";
 import { ProgressBar } from "./components/ProgressBar";
 import { createBackup, parseBackup } from "./lib/backup";
 import {
@@ -59,14 +60,12 @@ import {
 } from "./lib/calculations";
 import {
   clearPlannerData,
-  loadDemoData,
   putRecord,
   readPlannerState,
-  removeDemoData,
   removeRecord,
   replacePlannerState,
-  saveSettings,
-} from "./lib/db";
+} from "./lib/plannerGateway";
+import type { AppUserProfile } from "./lib/profile";
 import {
   emptyState,
   type Account,
@@ -137,11 +136,27 @@ const makeId = (): string =>
 const sortTransactions = (items: Transaction[]): Transaction[] =>
   [...items].sort((a, b) => b.date.localeCompare(a.date));
 
-export default function PlannerApp() {
+interface PlannerAppProps {
+  profile: AppUserProfile;
+  online: boolean;
+  onSignOut: () => Promise<void>;
+  onReplayTour: () => void;
+  onDeleteAccount: () => Promise<void>;
+  initialNav?: NavKey;
+}
+
+export default function PlannerApp({
+  profile,
+  online,
+  onSignOut,
+  onReplayTour,
+  onDeleteAccount,
+  initialNav = "dashboard",
+}: PlannerAppProps) {
   const [state, setState] = useState<PlannerState>(emptyState);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
+  const [activeNav, setActiveNav] = useState<NavKey>(initialNav);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [deleteIntent, setDeleteIntent] = useState<{
@@ -191,6 +206,14 @@ export default function PlannerApp() {
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
+  const requireOnline = (): boolean => {
+    if (online) return true;
+    setNotice(
+      "Edições ficam desativadas offline para evitar conflitos. Reconecte e tente novamente.",
+    );
+    return false;
+  };
+
   const summary = useMemo(
     () => summarizeMonth(state.transactions, month),
     [state.transactions, month],
@@ -233,50 +256,8 @@ export default function PlannerApp() {
     [state.transactions],
   );
 
-  const finishOnboarding = async (values: {
-    accountName: string;
-    balance: string;
-    demo: boolean;
-  }) => {
-    const now = new Date().toISOString();
-    if (values.demo) {
-      await loadDemoData();
-    }
-    if (values.accountName.trim()) {
-      const account: Account = {
-        id: values.demo ? "demo-account-main" : makeId(),
-        name: values.accountName.trim(),
-        type: "digital",
-        institution: values.demo ? "Banco fictício" : undefined,
-        initialBalanceCents: parseMoney(values.balance),
-        color: "#F8BF4D",
-        archived: false,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await putRecord("accounts", account);
-    }
-    if (!values.demo) {
-      await saveSettings({
-        ...state.settings,
-        onboardingComplete: true,
-        updatedAt: now,
-      });
-    }
-    await refresh();
-    setNotice("Tudo pronto. Sua Colmeia começou a tomar forma.");
-  };
-
-  const skipOnboarding = async () => {
-    await saveSettings({
-      ...state.settings,
-      onboardingComplete: true,
-      updatedAt: new Date().toISOString(),
-    });
-    await refresh();
-  };
-
   const saveModal = async (values: FormValues) => {
+    if (!requireOnline()) return;
     if (!modal) return;
     const now = new Date().toISOString();
     const base = {
@@ -371,6 +352,7 @@ export default function PlannerApp() {
   };
 
   const confirmDelete = async () => {
+    if (!requireOnline()) return;
     if (!deleteIntent) return;
     await removeRecord(deleteIntent.table, deleteIntent.id);
     setDeleteIntent(null);
@@ -382,6 +364,7 @@ export default function PlannerApp() {
     table: "accounts" | "cards" | "categories",
     record: Account | CreditCardRecord | Category,
   ) => {
+    if (!requireOnline()) return;
     await putRecord(table, {
       ...record,
       archived: !record.archived,
@@ -391,6 +374,7 @@ export default function PlannerApp() {
   };
 
   const duplicateTransaction = async (record: Transaction) => {
+    if (!requireOnline()) return;
     await putRecord("transactions", {
       ...record,
       id: makeId(),
@@ -455,6 +439,7 @@ export default function PlannerApp() {
   };
 
   const confirmImport = async () => {
+    if (!requireOnline()) return;
     if (!pendingImport) return;
     await replacePlannerState(pendingImport.data);
     setPendingImport(null);
@@ -523,6 +508,7 @@ export default function PlannerApp() {
   };
 
   const confirmCsvImport = async () => {
+    if (!requireOnline()) return;
     await Promise.all(pendingCsv.map((record) => putRecord("transactions", record)));
     setPendingCsv([]);
     await refresh();
@@ -555,9 +541,6 @@ export default function PlannerApp() {
         </button>
       </main>
     );
-
-  if (!state.settings.onboardingComplete)
-    return <Onboarding onFinish={finishOnboarding} onSkip={skipOnboarding} />;
 
   const renderDashboard = () => {
     const maxCategory = Math.max(...expensesByCategory.map((item) => item.value), 1);
@@ -1531,6 +1514,67 @@ export default function PlannerApp() {
         description="Cuide das categorias, dos backups e da experiência neste navegador."
       />
       <section className="settings-grid">
+        <article className="panel settings-card profile-settings-card">
+          <span className="settings-icon">
+            <UserRound size={22} />
+          </span>
+          <div>
+            <h2>Perfil e sessão</h2>
+            <p>Revise sua identidade, os provedores conectados e as opções da conta.</p>
+          </div>
+          <dl className="privacy-facts">
+            <div>
+              <dt>Nome</dt>
+              <dd>{profile.name}</dd>
+            </div>
+            <div>
+              <dt>E-mail</dt>
+              <dd>{profile.email}</dd>
+            </div>
+            <div>
+              <dt>Confirmação</dt>
+              <dd>{profile.emailConfirmed ? "Confirmado" : "Pendente"}</dd>
+            </div>
+            <div>
+              <dt>Provedores</dt>
+              <dd>{profile.providers.join(", ")}</dd>
+            </div>
+            <div>
+              <dt>Conta criada</dt>
+              <dd>{new Date(profile.createdAt).toLocaleDateString("pt-BR")}</dd>
+            </div>
+          </dl>
+          <div className="settings-actions">
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={onSignOut}
+            >
+              <LogOut size={17} /> Sair
+            </button>
+            <a className="button button--secondary" href="/privacidade/">
+              Política de Privacidade
+            </a>
+            <a className="button button--secondary" href="/termos/">
+              Termos de Uso
+            </a>
+            <button
+              className="button button--danger"
+              type="button"
+              onClick={async () => {
+                if (
+                  window.confirm(
+                    "Excluir sua conta remove permanentemente os dados sincronizados. Exporte um backup antes. Deseja continuar?",
+                  )
+                )
+                  await onDeleteAccount();
+              }}
+            >
+              <Trash2 size={17} /> Excluir conta
+            </button>
+          </div>
+        </article>
+
         <article className="panel settings-card">
           <span className="settings-icon">
             <FileJson size={22} />
@@ -1689,11 +1733,11 @@ export default function PlannerApp() {
             <ShieldCheck size={22} />
           </span>
           <div>
-            <h2>Privacidade local-first</h2>
+            <h2>Privacidade e sincronização</h2>
             <p>
-              Os dados ficam neste navegador e não são enviados para um servidor pela
-              aplicação. Limpar os dados do navegador pode apagá-los; faça backups
-              periódicos. Armazenamento local não equivale a criptografia completa.
+              O Supabase é a fonte oficial e este navegador mantém um cache separado por
+              conta. Exporte backups periódicos; armazenamento local não equivale a
+              criptografia completa.
             </p>
           </div>
           <dl className="privacy-facts">
@@ -1707,7 +1751,7 @@ export default function PlannerApp() {
             </div>
             <div>
               <dt>Sincronização</dt>
-              <dd>Não disponível neste MVP</dd>
+              <dd>{online ? "Conectada" : "Offline · somente leitura"}</dd>
             </div>
           </dl>
         </article>
@@ -1717,37 +1761,19 @@ export default function PlannerApp() {
             <RefreshCcw size={22} />
           </span>
           <div>
-            <h2>Recomeçar ou revisar</h2>
-            <p>Reabra o onboarding, remova a demonstração ou apague tudo.</p>
+            <h2>Revisar ou recomeçar</h2>
+            <p>
+              Reabra o tour sem criar registros ou apague os dados financeiros da conta.
+            </p>
           </div>
           <div className="settings-actions">
             <button
               className="button button--secondary"
               type="button"
-              onClick={async () => {
-                await saveSettings({
-                  ...state.settings,
-                  onboardingComplete: false,
-                  updatedAt: new Date().toISOString(),
-                });
-                await refresh();
-              }}
+              onClick={onReplayTour}
             >
-              <RefreshCcw size={17} /> Reiniciar onboarding
+              <RefreshCcw size={17} /> Ver novamente como usar a Colmeia
             </button>
-            {state.settings.demoLoaded && (
-              <button
-                className="button button--secondary"
-                type="button"
-                onClick={async () => {
-                  await removeDemoData();
-                  await refresh();
-                  setNotice("Dados demonstrativos removidos.");
-                }}
-              >
-                <Trash2 size={17} /> Remover demonstração
-              </button>
-            )}
             <button
               className="button button--danger"
               type="button"
@@ -1783,53 +1809,73 @@ export default function PlannerApp() {
   };
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      data-online={online}
+      onClickCapture={(event) => {
+        if (online) return;
+        const button = (event.target as HTMLElement).closest("button");
+        if (!button) return;
+        const action = `${button.textContent ?? ""} ${button.getAttribute("aria-label") ?? ""}`;
+        if (
+          /nova|novo|adicionar|editar|excluir|apagar|duplicar|arquivar|desarquivar|confirmar importa/i.test(
+            action,
+          )
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          requireOnline();
+        }
+      }}
+    >
       <a className="skip-link" href="#main-content">
         Pular para o conteúdo
       </a>
       <aside className={"sidebar" + (sidebarOpen ? " sidebar--open" : "")}>
-        <div className="sidebar-brand">
-          <BrandMark inverse />
-          <button
-            className="sidebar-close"
-            type="button"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Fechar menu"
-          >
-            <X size={20} />
-          </button>
+        <div className="sidebar-primary">
+          <div className="sidebar-brand">
+            <BrandMark inverse />
+            <button
+              className="sidebar-close"
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Fechar menu"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <nav aria-label="Navegação principal">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={activeNav === item.id ? "active" : ""}
+                  onClick={() => goTo(item.id)}
+                  aria-current={activeNav === item.id ? "page" : undefined}
+                >
+                  <Icon size={19} strokeWidth={1.9} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
         </div>
-        <nav aria-label="Navegação principal">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={activeNav === item.id ? "active" : ""}
-                onClick={() => goTo(item.id)}
-                aria-current={activeNav === item.id ? "page" : undefined}
-              >
-                <Icon size={19} strokeWidth={1.9} />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
         <div className="sidebar-tip">
           <span className="tip-hex">
             <ShieldCheck size={20} />
           </span>
           <p>
-            <strong>Privado por padrão</strong>
-            Seus dados ficam neste navegador.
+            <strong>Sincronizado com privacidade</strong>O acesso aos dados é separado
+            por conta.
           </p>
         </div>
         <footer>
           <p>
-            <strong>Colmeia</strong> Planejador v1
+            <strong>Colmeia</strong> Planejador v2
           </p>
-          <span className="offline-dot">Local-first</span>
+          <span className="offline-dot">Nuvem + cache local</span>
         </footer>
       </aside>
       {sidebarOpen && (
@@ -1866,15 +1912,31 @@ export default function PlannerApp() {
             <button
               className="quick-add"
               type="button"
+              disabled={!online}
               onClick={() => setModal({ kind: "transaction" })}
             >
               <Plus size={18} /> <span>Nova transação</span>
             </button>
-            <span className="profile-badge" aria-label="Perfil local">
-              LF
+            <span
+              className="profile-badge"
+              aria-label={`Perfil de ${profile.name}`}
+              title={profile.name}
+            >
+              {profile.name
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join("")
+                .toUpperCase()}
             </span>
           </div>
         </header>
+        {!online && (
+          <div className="offline-banner" role="status">
+            Você está offline. O último cache sincronizado continua disponível para
+            leitura; edições ficam desativadas para evitar conflitos.
+          </div>
+        )}
         <main id="main-content" className="content">
           {screens[activeNav]()}
         </main>

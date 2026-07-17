@@ -8,7 +8,9 @@ existem”. Gráficos só aparecem depois dessa síntese.
 
 ## Layout
 
-- Desktop: sidebar escura de 256 px, conteúdo fluido e grid de três colunas.
+- Desktop: sidebar escura de 256 px fica fixa à viewport e ocupa `100svh`; o menu
+  permanece disponível durante a rolagem e o bloco de privacidade com o rodapé
+  fica ancorado ao final da coluna visível.
 - Tablet: sidebar recolhida e grids de duas colunas.
 - Mobile: uma coluna, ações essenciais grandes e barra inferior rolável.
 - Área de toque mínima de 40 a 44 px nos controles principais.

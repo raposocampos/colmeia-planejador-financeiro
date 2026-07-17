@@ -1,7 +1,10 @@
 # Colmeia Educação Financeira
 
-Planejador financeiro local-first para organizar contas, cartões, receitas,
-despesas, orçamentos e metas com clareza e sem linguagem punitiva.
+Planejador financeiro para organizar contas, cartões, receitas, despesas,
+orçamentos e metas com clareza e sem linguagem punitiva.
+
+> A branch `feat/auth-cloud-sync-onboarding-v2` é uma revisão não publicada da
+> autenticação e sincronização. A versão pública atual continua no MVP local-first.
 
 ![Prévia social da Colmeia Educação Financeira](public/og.png)
 
@@ -13,7 +16,9 @@ Versão privada publicada: https://colmeia-planejador-financeiro.lucascampos.cha
 
 ## Funcionalidades
 
-- Onboarding em quatro etapas e demonstração fictícia opcional.
+- Autenticação por e-mail/senha, confirmação, Google OAuth e recuperação (V2 em revisão).
+- Onboarding autenticado em cinco etapas, com capturas reais e dados sanitizados.
+- Migração segura do IndexedDB legado, Supabase como fonte oficial e cache por usuário.
 - Dashboard mensal, saldo, categorias, orçamentos, metas e compromissos.
 - Contas, cartões e transações com edição, busca, filtro e confirmação.
 - Orçamentos mensais e metas com progresso.
@@ -23,16 +28,17 @@ Versão privada publicada: https://colmeia-planejador-financeiro.lucascampos.cha
 
 ## Stack
 
-React 19, TypeScript estrito, App Router, Vinext/Vite, CSS com tokens, Dexie,
-Zod, React Hook Form, Vitest, Testing Library e Playwright.
+React 19, TypeScript estrito, App Router, Vinext/Vite, Supabase JS, CSS com
+tokens, Dexie, Zod, React Hook Form, Vitest, Testing Library e Playwright.
 
 ## Começar
 
 Requer Node 22 e pnpm 11.
 
 1. pnpm install
-2. pnpm dev
-3. Abra http://localhost:3000
+2. Copie `.env.example` para `.env.local` e use um projeto Supabase local.
+3. pnpm dev
+4. Abra http://localhost:3000
 
 ## Qualidade
 
@@ -41,14 +47,16 @@ Requer Node 22 e pnpm 11.
 - pnpm format:check
 - pnpm test
 - pnpm test:e2e
+- pnpm verify:migrations
+- pnpm check:secrets
 - pnpm build
 - pnpm build:pages
 
 ## Armazenamento e backup
 
-Os dados ficam no IndexedDB deste navegador. Limpar dados do navegador pode
-apagá-los. Em Configurações, exporte JSON para backup completo ou CSV para
-portabilidade de transações. Não existe sincronização automática no MVP.
+Na V2, o Supabase é a fonte oficial e um IndexedDB separado por usuário guarda
+o último cache. O banco legado não é apagado automaticamente. Em Configurações,
+JSON e CSV continuam disponíveis. Offline permite leitura, mas não edição.
 
 ## Arquitetura e documentação
 
@@ -57,15 +65,15 @@ de testes, privacidade e limitações estão em docs/.
 
 ## Publicação
 
-O workflow .github/workflows/pages.yml valida o projeto, gera out/ e publica no
-GitHub Pages assim que o repositório público for conectado. O build padrão também
-produz o pacote compatível com Sites; a versão privada está publicada no link acima.
+O workflow existente continua publicando somente a `main`. Pull requests executam
+os gates da V2. Esta branch não faz merge, staging ou deploy sem aprovação explícita
+de Lucas Campos.
 
 ## Limitações e roadmap
 
-O MVP não possui login, backend, Open Finance, OFX, parcelamento avançado ou
-sincronização. O roadmap considera compartilhamento familiar, Supabase,
-notificações, planejamento anual, simuladores e assistente educacional.
+A V2 ainda depende da configuração externa de Supabase, SMTP, Google OAuth e URLs
+autorizadas, além de revisão jurídica. Open Finance, OFX, compartilhamento familiar,
+pagamentos, assinaturas, planejamento familiar/aposentadoria e IA estão fora do escopo.
 
 ## Aviso
 

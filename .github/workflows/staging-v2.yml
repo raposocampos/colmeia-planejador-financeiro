@@ -1,0 +1,137 @@
+name: Prepare V2 staging
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Digite STAGING para validar o ambiente isolado"
+        required: true
+        type: string
+      apply_migrations:
+        description: "Aplicar migrations após o dry-run"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: colmeia-v2-staging
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'staging-dry-run' ||
+      github.event.label.name == 'staging-apply'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the isolated staging confirmation
+        env:
+          STAGING_CONFIRMATION: ${{ inputs.confirmation }}
+          STAGING_LABEL: ${{ github.event.label.name }}
+        run: >-
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            test "$STAGING_CONFIRMATION" = "STAGING";
+          else
+            test "$STAGING_LABEL" = "staging-dry-run" -o "$STAGING_LABEL" = "staging-apply";
+          fi
+
+  quality:
+    needs: guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.7.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm verify:migrations
+      - run: pnpm check:secrets
+      - run: pnpm audit:deps
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+
+  staging:
+    needs: quality
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      COLMEIA_DEPLOY_TARGET: staging
+      SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.7.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate isolated staging configuration
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm staging:validate
+      - name: Link only the staging Supabase project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: >-
+          pnpm exec supabase link
+          --project-ref "$SUPABASE_PROJECT_ID"
+          --password "$SUPABASE_DB_PASSWORD"
+      - name: Preview database changes
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: >-
+          pnpm exec supabase db push
+          --linked
+          --dry-run
+          --password "$SUPABASE_DB_PASSWORD"
+      - name: Apply database changes to staging
+        if: inputs.apply_migrations || github.event.label.name == 'staging-apply'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: >-
+          pnpm exec supabase db push
+          --linked
+          --password "$SUPABASE_DB_PASSWORD"
+          --yes
+      - name: Verify real RLS and legacy migration
+        if: inputs.apply_migrations || github.event.label.name == 'staging-apply'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm test:staging:security
+      - name: Build the staging artifact without deploying it
+        env:
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: colmeia-v2-staging-${{ github.sha }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
