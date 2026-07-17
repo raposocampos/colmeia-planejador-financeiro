@@ -151,8 +151,8 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 - Supabase de staging e produção, schema, grants, RLS, Site URL, callbacks, SMTP
   próprio e templates personalizados foram configurados e validados. Uma mensagem
   real de recuperação foi entregue com um único link e sem o bloco padrão em inglês.
-- O host navegável usa um repositório GitHub Pages separado e aceita somente dados
-  fictícios; o Sites público e a produção permaneceram inalterados.
+- O host de staging continua isolado e aceita somente dados fictícios. A V2 foi
+  publicada no Sites e no GitHub Pages após aprovação dos gates de produção.
 - Não há edição offline nem merge automático de conflitos.
 - Termos, Privacidade, retenção e fornecedores precisam de revisão jurídica/contratual.
 - O modo de revisão é compilado apenas pelo build local `build:review` e não é produção.

@@ -24,8 +24,9 @@
   separado e deve receber somente dados fictícios. Merge e produção foram
   autorizados; o gate de SMTP do projeto `colmeia-producao` foi atendido.
 
-- No MVP público atual os dados existem apenas no navegador; a V2 adiciona conta e
-  sincronização assim que o gate de produção for liberado.
+- Na V2 pública, o Supabase é a fonte oficial e o IndexedDB separado por usuário
+  funciona como cache de leitura. O banco local legado é preservado até uma decisão
+  explícita no fluxo de migração.
 - IndexedDB não representa criptografia completa.
 - Recorrências são lembretes declarativos e não geram lançamentos.
 - CSV aceita formato simples e não interpreta campos com separador dentro do

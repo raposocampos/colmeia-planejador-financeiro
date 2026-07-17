@@ -61,9 +61,14 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - `docs/quality/screenshots/v2/dashboard-migrated.png`
 - `docs/quality/screenshots/v2/profile-privacy.png`
 
-A V2 ainda não foi publicada em produção. Código, banco, URLs de callback,
-variáveis públicas dos hosts, SMTP e templates estão preparados; todos os gates
-técnicos para o deploy final foram aprovados.
+A V2 foi publicada em produção no Sites e no GitHub Pages. Login, autenticação
+real, rotas legais, assets, foco do campo de senha e ausência de overflow foram
+validados nos dois hosts. O teste autenticado parou no aviso de migração e não
+importou, mesclou nem apagou dados do IndexedDB legado.
+
+- Sites: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
+- GitHub Pages: https://raposocampos.github.io/colmeia-planejador-financeiro/
+- CI e deploy: https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29547760263
 
 Evidências integradas: dry-run
 [29535218591](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591)

@@ -163,3 +163,28 @@ Após essa validação, instalação congelada, typecheck, lint, formato, 38 tes
 15 execuções E2E, migrations/RLS, varredura de 159 arquivos, auditoria sem
 vulnerabilidade alta ou crítica, build Vinext, build Pages e `git diff --check`
 foram aprovados. O gate de SMTP para merge e publicação está atendido.
+
+## Publicação de produção
+
+A PR #3 foi retirada de rascunho após o
+[CI 29547363948](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29547363948)
+aprovar todos os gates e foi mesclada em `main` sem force push. O
+[run 29547451690](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29547451690)
+repetiu os gates e publicou a V2 no GitHub Pages.
+
+Na primeira versão empacotada para Sites, a validação pós-deploy detectou que as
+variáveis públicas `NEXT_PUBLIC_*` estavam cadastradas no host, mas não tinham sido
+incorporadas ao bundle cliente. A entrega não foi considerada concluída. O build
+foi refeito carregando as variáveis diretamente do ambiente hospedado, sem criar
+ou versionar `.env`, e a versão corrigida substituiu a anterior no endereço público.
+O runbook passou a registrar essa exigência para releases futuras.
+
+Sites e GitHub Pages foram abertos após a publicação. Nos dois hosts, login, assets,
+rotas de recuperação, Termos e Privacidade, foco do campo de senha, controle único
+de visualização e ausência de overflow foram aprovados. Um login real no Sites
+alcançou o aviso de migração do IndexedDB, comprovando a conexão com o Supabase de
+produção; o teste foi interrompido nesse ponto e nenhum dado local foi importado,
+mesclado ou apagado.
+
+- Sites: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
+- GitHub Pages: https://raposocampos.github.io/colmeia-planejador-financeiro/
