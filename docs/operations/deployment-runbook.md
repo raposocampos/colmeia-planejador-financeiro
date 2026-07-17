@@ -41,3 +41,6 @@ pare. A autorização de staging não autoriza merge nem produção.
 9. Aprovar janela, backup e rollback antes de produção.
 10. Após publicar, validar login, rotas, console, responsividade e conexão com o
     projeto Supabase correto em Sites e GitHub Pages.
+11. No domínio próprio, manter todos os IPs raiz dentro do mesmo registro `A` quando
+    o provedor agrupar conteúdos por nome. Preservar registros de e-mail e adicionar
+    o domínio e seus callbacks à configuração de URL do Supabase.

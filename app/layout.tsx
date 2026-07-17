@@ -2,9 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const publicUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  "https://colmeia-planejador-financeiro.lucascampos.chatgpt.site";
+const publicUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://colmeiaeducacao.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicUrl),

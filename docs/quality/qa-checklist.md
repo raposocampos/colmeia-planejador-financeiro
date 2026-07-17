@@ -66,7 +66,8 @@ real, rotas legais, assets, foco do campo de senha e ausência de overflow foram
 validados nos dois hosts. O teste autenticado parou no aviso de migração e não
 importou, mesclou nem apagou dados do IndexedDB legado.
 
-- Sites: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
+- Domínio principal: https://colmeiaeducacao.com
+- Sites alternativo: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
 - GitHub Pages: https://raposocampos.github.io/colmeia-planejador-financeiro/
 - CI e deploy: https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29547760263
 

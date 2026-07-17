@@ -186,5 +186,18 @@ alcançou o aviso de migração do IndexedDB, comprovando a conexão com o Supab
 produção; o teste foi interrompido nesse ponto e nenhum dado local foi importado,
 mesclado ou apagado.
 
-- Sites: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
+- Domínio principal: https://colmeiaeducacao.com
+- Sites alternativo: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
 - GitHub Pages: https://raposocampos.github.io/colmeia-planejador-financeiro/
+
+## Domínio próprio
+
+Em 16/07/2026, a zona DNS da Locaweb passou a manter os dois destinos `A` do
+Sites no mesmo registro raiz, conforme o modelo de múltiplos conteúdos do provedor.
+Também foram adicionados os TXT de propriedade do OpenAI Sites e validação do
+hostname Cloudflare. MX, SPF, DKIM e DMARC do Resend permaneceram intactos.
+
+`https://colmeiaeducacao.com/` foi definido como Site URL de produção no Supabase,
+com callbacks explícitos para confirmação e recuperação. O endereço também passou
+a ser `NEXT_PUBLIC_SITE_URL` do Sites; os hosts técnicos anteriores continuam na
+lista autorizada para compatibilidade e rollback.

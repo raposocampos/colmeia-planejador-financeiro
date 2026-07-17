@@ -3,12 +3,14 @@
 Planejador financeiro para organizar contas, cartões, receitas, despesas,
 orçamentos e metas com clareza e sem linguagem punitiva.
 
-> A branch `feat/auth-cloud-sync-onboarding-v2` é uma revisão não publicada da
-> autenticação e sincronização. A versão pública atual continua no MVP local-first.
+> A V2 publicada usa Supabase como fonte oficial e preserva o IndexedDB legado até
+> uma decisão explícita no fluxo de migração.
 
 ![Prévia social da Colmeia Educação Financeira](public/og.png)
 
-Versão privada publicada: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
+Site público: https://colmeiaeducacao.com
+
+Endereço técnico alternativo: https://colmeia-planejador-financeiro.lucascampos.chatgpt.site
 
 ![Dashboard do planejador](docs/quality/screenshots/dashboard-desktop.png)
 
@@ -16,7 +18,8 @@ Versão privada publicada: https://colmeia-planejador-financeiro.lucascampos.cha
 
 ## Funcionalidades
 
-- Autenticação por e-mail/senha, confirmação, Google OAuth e recuperação (V2 em revisão).
+- Autenticação por e-mail/senha, confirmação e recuperação. Google OAuth permanece
+  oculto até a validação do provedor.
 - Onboarding autenticado em cinco etapas, com capturas reais e dados sanitizados.
 - Migração segura do IndexedDB legado, Supabase como fonte oficial e cache por usuário.
 - Dashboard mensal, saldo, categorias, orçamentos, metas e compromissos.
