@@ -6,7 +6,7 @@ Branch: `feat/auth-cloud-sync-onboarding-v2`
 
 Pull Request: https://github.com/raposocampos/colmeia-planejador-financeiro/pull/3
 
-Estado: **merge e produção autorizados; deploy bloqueado até SMTP funcional**
+Estado: **merge e produção autorizados; gates técnicos aprovados**
 
 ## Ajuste solicitado após a primeira revisão
 
@@ -148,9 +148,9 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 ## 8. Limitações conhecidas
 
-- Supabase de staging e produção, schema, grants, RLS, Site URL e callbacks foram
-  configurados e validados. O plano gratuito recusou templates personalizados sem
-  SMTP próprio, e o provedor padrão não atende usuários externos ao time.
+- Supabase de staging e produção, schema, grants, RLS, Site URL, callbacks, SMTP
+  próprio e templates personalizados foram configurados e validados. Uma mensagem
+  real de recuperação foi entregue com um único link e sem o bloco padrão em inglês.
 - O host navegável usa um repositório GitHub Pages separado e aceita somente dados
   fictícios; o Sites público e a produção permaneceram inalterados.
 - Não há edição offline nem merge automático de conflitos.
@@ -159,7 +159,7 @@ IDs/centavos/datas e só registra conclusão após contagens. O banco legado nã
 
 ## 9. Riscos antes da produção
 
-- SMTP ausente impedindo confirmação e recuperação para o público externo;
+- disponibilidade, cotas e reputação operacional do provedor de e-mail;
 - configuração incorreta de OAuth ou domínio;
 - cotas e retenção do plano Supabase escolhido;
 - XSS ou dispositivo comprometido expondo uma sessão persistida;
@@ -205,8 +205,7 @@ isolado de staging e repetiu todos os gates. Nenhum merge ou deploy de produçã
 executado.
 
 Na solicitação seguinte, Lucas declarou “Agora faça os ajustes e suba para Prod”,
-autorizando explicitamente merge e publicação após os ajustes. A infraestrutura de
-produção foi preparada e testada, mas o deploy permanece bloqueado pelo gate de
-SMTP: sem provedor próprio, confirmação e recuperação não funcionam para usuários
-externos ao time do Supabase. A autorização continua válida após esse gate ser
-atendido.
+autorizando explicitamente merge e publicação após os ajustes. O SMTP próprio foi
+configurado em produção e uma recuperação real foi entregue com remetente, assunto
+e template da Colmeia. Em seguida, Lucas confirmou que estava tudo verificado e
+autorizou prosseguir; o gate de e-mail está atendido.

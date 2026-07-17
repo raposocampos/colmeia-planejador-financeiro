@@ -75,9 +75,9 @@ build Vinext, build Pages e `git diff --check` passaram. Produção, Sites, Page
 
 Após autorização explícita para usar o Chrome autenticado, foi criado o projeto
 isolado `colmeia-v2-staging` em `ca-central-1`. Confirmação de e-mail ficou ativa;
-SMTP próprio, Google OAuth e callbacks hospedados permanecem pendentes. Chaves,
-token e senha rotacionada foram armazenados exclusivamente no GitHub Environment
-`staging` e não foram copiados para arquivos, commits ou comentários.
+Google OAuth e seus callbacks permanecem pendentes. Chaves, token e senha rotacionada
+foram armazenados exclusivamente nos serviços externos e no GitHub Environment
+`staging`; não foram copiados para arquivos, commits ou comentários.
 
 O primeiro dry-run válido foi concluído no
 [run 29535218591](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591):
@@ -112,9 +112,25 @@ Evidências:
 - [login hospedado desktop](screenshots/staging-v2-login-desktop.png);
 - [login hospedado mobile](screenshots/staging-v2-login-mobile.png).
 
-SMTP próprio e Google OAuth não foram ativados por ausência de credenciais próprias.
-O teste de entrega de e-mail, confirmação real e recuperação permanece pendente de
-um endereço de teste autorizado. Merge e produção continuam bloqueados.
+Em 16/07/2026, o domínio `auth.colmeiaeducacao.com` foi verificado no Resend e o
+SMTP próprio foi ativado no projeto de staging com chave restrita somente a envio
+por esse domínio. Os templates versionados de confirmação e recuperação foram
+aplicados no Supabase. Um envio de recuperação autorizado foi aceito pelo Supabase
+e registrado como `delivered` no Resend, com remetente, assunto e conteúdo da
+Colmeia e sem assinatura visual do Supabase. O endereço completo e a credencial não
+foram registrados. Google OAuth permanece pendente. A validação não libera o projeto
+de produção, que exige sua própria configuração e comprovação de SMTP.
+
+O primeiro e-mail revelou que o editor do painel havia anexado o HTML da Colmeia ao
+modelo padrão em inglês. Os modelos de recuperação e confirmação foram reaplicados
+com substituição integral e conferidos novamente após recarregar o painel: cada um
+corresponde ao arquivo versionado, contém exatamente um `ConfirmationURL` e não
+contém o bloco padrão em inglês.
+
+Um segundo envio de recuperação autorizado foi registrado como `delivered`. A
+mensagem gerada contém um único botão “Criar nova senha”, um único bloco visual da
+Colmeia e nenhum trecho do modelo padrão em inglês; remetente e assunto personalizados
+também foram confirmados sem registrar o endereço do destinatário ou o link assinado.
 
 ## Preparação do ambiente de produção
 
@@ -129,8 +145,21 @@ As contas fictícias foram removidas e a senha de banco foi rotacionada.
 Sites e GitHub receberam somente a URL e a chave pública publicável do projeto; não
 há chave administrativa no bundle. Site URL e callbacks de confirmação/recuperação
 foram configurados para Sites e GitHub Pages. Os templates em português ficaram
-versionados em `supabase/templates/`, mas a API do plano gratuito recusou aplicá-los
-sem SMTP próprio. Como o provedor padrão também limita entrega a membros autorizados
-do time, merge e deploy seguem bloqueados até SMTP e teste externo aprovados.
-Google OAuth permanece desativado e seu botão fica oculto por padrão, evitando uma
-ação não funcional até que credenciais e callbacks próprios sejam validados.
+versionados em `supabase/templates/`. O SMTP do Resend foi ativado no projeto de
+produção com remetente do domínio verificado `auth.colmeiaeducacao.com`, e os dois
+templates foram aplicados por substituição integral. Google OAuth permanece
+desativado e seu botão fica oculto por padrão, evitando uma ação não funcional até
+que credenciais e callbacks próprios sejam validados.
+
+Uma conta autorizada pelo proprietário recebeu uma recuperação real registrada
+como `delivered`. A mensagem entregue contém exatamente um botão “Criar nova
+senha”, um único link assinado, remetente, assunto e rodapé da Colmeia, e nenhum
+trecho do modelo padrão em inglês. O endereço e o link assinado não foram
+registrados. A primeira chave criada durante a configuração foi revogada antes de
+ser salva ou utilizada; a substituta ficou armazenada somente no Supabase e no
+provedor externo.
+
+Após essa validação, instalação congelada, typecheck, lint, formato, 38 testes,
+15 execuções E2E, migrations/RLS, varredura de 159 arquivos, auditoria sem
+vulnerabilidade alta ou crítica, build Vinext, build Pages e `git diff --check`
+foram aprovados. O gate de SMTP para merge e publicação está atendido.

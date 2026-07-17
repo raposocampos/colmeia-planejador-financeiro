@@ -2,13 +2,13 @@
 
 ## V2 em revisão
 
-- O projeto Supabase de staging existe em `ca-central-1`, a confirmação de e-mail,
-  a migration V2, a Site URL e os callbacks hospedados foram configurados. SMTP
-  próprio e Google OAuth ainda aguardam credenciais exclusivas de staging.
+- O projeto Supabase de staging existe em `ca-central-1`; confirmação de e-mail,
+  migration V2, Site URL, callbacks e SMTP próprio foram configurados. A recuperação
+  real foi entregue por remetente da Colmeia. Google OAuth ainda aguarda credenciais
+  exclusivas de staging.
 - O projeto de produção `colmeia-producao` existe em `sa-east-1`; schema, grants,
-  RLS, migração e callbacks foram validados. O provedor padrão de e-mail do plano
-  gratuito entrega apenas a endereços autorizados do time, por isso o deploy público
-  permanece bloqueado até configurar SMTP próprio e comprovar confirmação/recuperação.
+  RLS, migração, callbacks e SMTP próprio foram validados. Uma recuperação real foi
+  entregue com remetente e template da Colmeia, sem conteúdo padrão em inglês.
 - O botão Google OAuth fica oculto por padrão e só é compilado quando
   `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`; ele não será exibido em produção até o
   provedor e os callbacks do Google serem validados.
@@ -20,9 +20,9 @@
 - O bundle principal ainda gera um aviso de chunk superior a 500 kB; code splitting fica para uma otimização posterior.
 - A árvore de desenvolvimento mantém um aviso de baixa severidade em `@babel/core`; a correção indicada (`7.29.1`) ainda não foi publicada e uma mudança para Babel 8 seria incompatível nesta fase.
 - O GitHub Environment e o workflow de banco foram executados com secrets
-  protegidos. O host navegável existe em um repositório GitHub Pages separado e
-  deve receber somente dados fictícios. Merge e produção foram autorizados, mas a
-  publicação segue bloqueada pelo gate de entrega de e-mail.
+  protegidos. O host navegável de staging existe em um repositório GitHub Pages
+  separado e deve receber somente dados fictícios. Merge e produção foram
+  autorizados; o gate de SMTP do projeto `colmeia-producao` foi atendido.
 
 - No MVP público atual os dados existem apenas no navegador; a V2 adiciona conta e
   sincronização assim que o gate de produção for liberado.

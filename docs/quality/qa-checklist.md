@@ -46,7 +46,7 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - [x] Merge autorizado por Lucas no pedido explícito de publicação em produção.
 - [x] Preparação de staging autorizada por Lucas em 16/07/2026.
 - [x] Produção autorizada por Lucas em 16/07/2026.
-- [ ] SMTP próprio configurado e entrega para usuário externo comprovada.
+- [x] SMTP próprio configurado e entrega para usuário externo comprovada.
 
 ## Evidências
 
@@ -61,9 +61,9 @@ Executado em 16/07/2026 na branch `feat/auth-cloud-sync-onboarding-v2`.
 - `docs/quality/screenshots/v2/dashboard-migrated.png`
 - `docs/quality/screenshots/v2/profile-privacy.png`
 
-A V2 ainda não foi publicada em produção. Código, banco, URLs de callback e
-variáveis públicas dos hosts estão preparados; o deploy final permanece bloqueado
-até existir SMTP funcional para usuários externos ao time do Supabase.
+A V2 ainda não foi publicada em produção. Código, banco, URLs de callback,
+variáveis públicas dos hosts, SMTP e templates estão preparados; todos os gates
+técnicos para o deploy final foram aprovados.
 
 Evidências integradas: dry-run
 [29535218591](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591)

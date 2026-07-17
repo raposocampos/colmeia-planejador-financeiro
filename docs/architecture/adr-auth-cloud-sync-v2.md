@@ -1,6 +1,7 @@
 # ADR — autenticação e sincronização V2
 
-Status: aceito para implementação em branch de revisão. Produção não autorizada.
+Status: aceito. Produção autorizada em 16/07/2026 após aprovação visual, validação
+de RLS, SMTP próprio, entrega real e gates automatizados.
 
 ## Contexto
 
