@@ -88,5 +88,7 @@ e aplicação/testes
 - [x] E2E: 20 aprovados em desktop/mobile e 2 skips específicos de viewport.
 - [x] Unitários/componentes: 45 aprovados em 15 arquivos.
 - [x] Evidência visual: `docs/quality/screenshots/v2/category-order-desktop.png`.
-- [ ] Migração aplicada e release publicada em produção.
-- [ ] URLs públicas revalidadas sem mutação de dados financeiros reais.
+- [x] Migração aplicada e release publicada em produção.
+- [x] URLs públicas revalidadas sem mutação de dados financeiros reais.
+
+CI da manutenção: [29556009371](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29556009371).

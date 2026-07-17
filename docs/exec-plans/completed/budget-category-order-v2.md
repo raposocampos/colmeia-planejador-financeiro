@@ -1,6 +1,6 @@
 # Plano de execução — orçamento e ordem de categorias V2
 
-Atualizado em 17/07/2026.
+Concluído em 17/07/2026.
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ Corrigir a criação de orçamentos no banco remoto, remover a escolha artificia
 - [x] Adicionar mensagens seguras para falhas de gravação remota.
 - [x] Cobrir regressões com testes unitários, componentes e E2E.
 - [x] Aplicar a migração em produção e verificar coluna, restrição e RPC.
-- [ ] Publicar e validar os hosts sem alterar dados reais de usuários.
+- [x] Publicar e validar os hosts sem alterar dados reais de usuários.
 
 ## Decisões
 
@@ -26,8 +26,14 @@ RPC de reordenação recebe todos os IDs, deriva o proprietário de `auth.uid()`
 atualiza apenas as categorias da sessão. A correção do orçamento troca somente a
 restrição de formato por `YYYY-MM`; nenhuma linha financeira é alterada.
 
+## Resultado
+
+A migração foi verificada por consulta somente de leitura. GitHub Actions, Pages
+e Sites concluíram com sucesso. A validação pública foi feita sem criar, editar ou
+apagar orçamentos, transações, contas ou categorias reais.
+
 ## Recuperação
 
-Se a publicação falhar, o artefato atual permanece ativo. Se a migração falhar,
-a transação do PostgreSQL é revertida. A aplicação não deve ser publicada antes
-de a nova coluna, a restrição corrigida e a RPC estarem disponíveis.
+O histórico do Sites e do GitHub Pages mantém os artefatos anteriores disponíveis
+para rollback. A migração é transacional e não contém `update`, `delete` ou backfill
+dos registros financeiros existentes.
