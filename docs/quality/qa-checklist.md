@@ -75,3 +75,18 @@ Evidências integradas: dry-run
 [29535218591](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535218591)
 e aplicação/testes
 [29535426194](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29535426194).
+
+## Manutenção de 17/07/2026 — orçamento e categorias
+
+- [x] Erro de orçamento reproduzido sem criar ou excluir dados reais.
+- [x] Restrição de `month` corrigida de forma aditiva e sem backfill.
+- [x] Backups antigos continuam válidos com `sortOrder` opcional.
+- [x] “Sem categoria” removido dos formulários; arquivadas não aparecem.
+- [x] Ordem persiste no adapter local, cache autenticado e Supabase.
+- [x] RPC usa `auth.uid()`, rejeita IDs ausentes/duplicados e bloqueia anônimos.
+- [x] Reordenação validada por mouse e teclado.
+- [x] E2E: 20 aprovados em desktop/mobile e 2 skips específicos de viewport.
+- [x] Unitários/componentes: 45 aprovados em 15 arquivos.
+- [x] Evidência visual: `docs/quality/screenshots/v2/category-order-desktop.png`.
+- [ ] Migração aplicada e release publicada em produção.
+- [ ] URLs públicas revalidadas sem mutação de dados financeiros reais.

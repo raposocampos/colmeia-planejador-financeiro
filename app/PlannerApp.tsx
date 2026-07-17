@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   Archive,
   ArrowDownLeft,
@@ -18,6 +26,7 @@ import {
   FileJson,
   Gauge,
   Goal as GoalIcon,
+  GripVertical,
   Landmark,
   LayoutDashboard,
   Menu,
@@ -43,6 +52,7 @@ import { BrandMark } from "./components/BrandMark";
 import { EntryModal, type FormValues, type ModalState } from "./components/EntryModal";
 import { ProgressBar } from "./components/ProgressBar";
 import { createBackup, parseBackup } from "./lib/backup";
+import { moveCategoryId, sortCategories } from "./lib/categories";
 import {
   accountBalance,
   budgetProgress,
@@ -62,6 +72,7 @@ import {
   clearPlannerData,
   putRecord,
   readPlannerState,
+  reorderCategories as reorderCategoryRecords,
   removeRecord,
   replacePlannerState,
 } from "./lib/plannerGateway";
@@ -174,6 +185,13 @@ export default function PlannerApp({
   const [reportCard, setReportCard] = useState("");
   const [pendingImport, setPendingImport] = useState<BackupData | null>(null);
   const [pendingCsv, setPendingCsv] = useState<Transaction[]>([]);
+  const [categoryOrderPreview, setCategoryOrderPreview] = useState<string[] | null>(
+    null,
+  );
+  const [draggingCategoryId, setDraggingCategoryId] = useState<string | null>(null);
+  const draggingCategoryRef = useRef<string | null>(null);
+  const initialCategoryOrderRef = useRef<string[]>([]);
+  const categoryOrderRef = useRef<string[]>([]);
 
   const refresh = useCallback(async () => {
     try {
@@ -212,6 +230,124 @@ export default function PlannerApp({
       "Edições ficam desativadas offline para evitar conflitos. Reconecte e tente novamente.",
     );
     return false;
+  };
+
+  const storedCategories = useMemo(
+    () => sortCategories(state.categories),
+    [state.categories],
+  );
+  const orderedCategories = useMemo(() => {
+    if (!categoryOrderPreview) return storedCategories;
+    const byId = new Map(storedCategories.map((category) => [category.id, category]));
+    const preview = categoryOrderPreview
+      .map((id) => byId.get(id))
+      .filter((category): category is Category => Boolean(category));
+    return preview.length === storedCategories.length ? preview : storedCategories;
+  }, [categoryOrderPreview, storedCategories]);
+
+  const persistCategoryOrder = async (orderedIds: string[]) => {
+    try {
+      await reorderCategoryRecords(orderedIds);
+      await refresh();
+      setNotice("Ordem das categorias atualizada.");
+    } catch {
+      setNotice("Não foi possível atualizar a ordem das categorias.");
+    } finally {
+      setCategoryOrderPreview(null);
+      setDraggingCategoryId(null);
+      draggingCategoryRef.current = null;
+    }
+  };
+
+  const beginCategoryDrag = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+    categoryId: string,
+  ) => {
+    if (event.button !== 0 || !requireOnline()) return;
+    event.preventDefault();
+    const ids = orderedCategories.map((category) => category.id);
+    initialCategoryOrderRef.current = ids;
+    categoryOrderRef.current = ids;
+    draggingCategoryRef.current = categoryId;
+    setDraggingCategoryId(categoryId);
+    setCategoryOrderPreview(ids);
+
+    const pointerId = event.pointerId;
+    const removeListeners = () => {
+      window.removeEventListener("pointermove", moveListener);
+      window.removeEventListener("pointerup", finishListener);
+      window.removeEventListener("pointercancel", cancelListener);
+    };
+    const moveListener = (pointerEvent: PointerEvent) => {
+      if (pointerEvent.pointerId !== pointerId) return;
+      pointerEvent.preventDefault();
+      moveDraggedCategory(pointerEvent.clientX, pointerEvent.clientY);
+    };
+    const finishListener = (pointerEvent: PointerEvent) => {
+      if (pointerEvent.pointerId !== pointerId) return;
+      removeListeners();
+      finishCategoryDrag();
+    };
+    const cancelListener = (pointerEvent: PointerEvent) => {
+      if (pointerEvent.pointerId !== pointerId) return;
+      removeListeners();
+      cancelCategoryDrag();
+    };
+    window.addEventListener("pointermove", moveListener, { passive: false });
+    window.addEventListener("pointerup", finishListener);
+    window.addEventListener("pointercancel", cancelListener);
+  };
+
+  const moveDraggedCategory = (clientX: number, clientY: number) => {
+    const categoryId = draggingCategoryRef.current;
+    if (!categoryId) return;
+    const target = document
+      .elementFromPoint(clientX, clientY)
+      ?.closest<HTMLElement>("[data-category-id]")?.dataset.categoryId;
+    if (!target || target === categoryId) return;
+    const next = moveCategoryId(categoryOrderRef.current, categoryId, target);
+    if (next === categoryOrderRef.current) return;
+    categoryOrderRef.current = next;
+    setCategoryOrderPreview(next);
+  };
+
+  const finishCategoryDrag = () => {
+    const next = categoryOrderRef.current;
+    const changed = next.some(
+      (id, index) => id !== initialCategoryOrderRef.current[index],
+    );
+    if (changed) void persistCategoryOrder(next);
+    else {
+      setCategoryOrderPreview(null);
+      setDraggingCategoryId(null);
+      draggingCategoryRef.current = null;
+    }
+  };
+
+  const cancelCategoryDrag = () => {
+    setCategoryOrderPreview(null);
+    setDraggingCategoryId(null);
+    draggingCategoryRef.current = null;
+  };
+
+  const moveCategoryWithKeyboard = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    categoryId: string,
+  ) => {
+    const ids = orderedCategories.map((category) => category.id);
+    const currentIndex = ids.indexOf(categoryId);
+    let targetIndex = currentIndex;
+    if (event.key === "ArrowLeft" || event.key === "ArrowUp") targetIndex -= 1;
+    else if (event.key === "ArrowRight" || event.key === "ArrowDown") targetIndex += 1;
+    else if (event.key === "Home") targetIndex = 0;
+    else if (event.key === "End") targetIndex = ids.length - 1;
+    else return;
+    event.preventDefault();
+    targetIndex = Math.max(0, Math.min(ids.length - 1, targetIndex));
+    if (targetIndex === currentIndex || !requireOnline()) return;
+    const next = moveCategoryId(ids, categoryId, ids[targetIndex]);
+    setCategoryOrderPreview(next);
+    void persistCategoryOrder(next);
   };
 
   const summary = useMemo(
@@ -343,6 +479,7 @@ export default function PlannerApp({
         color: values.color,
         icon: previous?.icon ?? "categoria",
         archived: previous?.archived ?? false,
+        sortOrder: previous?.sortOrder ?? orderedCategories.length,
       };
       await putRecord("categories", record);
     }
@@ -1341,7 +1478,7 @@ export default function PlannerApp({
               onChange={(event) => setReportCategory(event.target.value)}
             >
               <option value="">Todas</option>
-              {state.categories.map((item) => (
+              {orderedCategories.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -1691,13 +1828,31 @@ export default function PlannerApp({
           <div>
             <h2>Categorias</h2>
             <p>Personalize nomes, cores e disponibilidade para o seu cotidiano.</p>
+            <p className="category-order-help" id="category-order-help">
+              Arraste pelo marcador para mudar a ordem. No teclado, use as setas, Home e
+              End.
+            </p>
           </div>
           <div className="category-pills">
-            {state.categories.map((category) => (
+            {orderedCategories.map((category, index) => (
               <span
                 key={category.id}
-                className={category.archived ? "is-archived" : ""}
+                data-category-id={category.id}
+                className={
+                  (category.archived ? "is-archived" : "") +
+                  (draggingCategoryId === category.id ? " is-dragging" : "")
+                }
               >
+                <button
+                  className="category-drag-handle"
+                  type="button"
+                  aria-label={`Mover ${category.name}. Posição ${index + 1} de ${orderedCategories.length}`}
+                  aria-describedby="category-order-help"
+                  onPointerDown={(event) => beginCategoryDrag(event, category.id)}
+                  onKeyDown={(event) => moveCategoryWithKeyboard(event, category.id)}
+                >
+                  <GripVertical size={14} />
+                </button>
                 <i style={{ background: category.color }} />
                 {category.name}
                 <button
@@ -1964,7 +2119,7 @@ export default function PlannerApp({
           modal={modal}
           accounts={state.accounts}
           cards={state.cards}
-          categories={state.categories}
+          categories={orderedCategories}
           onClose={() => setModal(null)}
           onSubmit={saveModal}
         />

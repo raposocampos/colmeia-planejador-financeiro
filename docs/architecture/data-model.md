@@ -14,7 +14,9 @@ cor e archived. A fatura atual é derivada das despesas do mês.
 
 ## Category
 
-Nome, kind income/expense/both, cor, ícone semântico e archived.
+Nome, kind income/expense/both, cor, ícone semântico, archived e `sortOrder`
+opcional. A ausência de posição mantém backups e registros antigos compatíveis;
+ao reordenar, todas as categorias da pessoa recebem posições inteiras sequenciais.
 
 ## Transaction
 
@@ -28,7 +30,8 @@ como lembrete e evita duplicações silenciosas; o usuário duplica quando desej
 ## Budget
 
 Categoria, mês YYYY-MM e limite em centavos. Utilizado é a soma das despesas da
-categoria no mês, incluindo pendentes para uma visão prudente.
+categoria no mês, incluindo pendentes para uma visão prudente. O banco valida
+`month` com o formato estrito `YYYY-MM`.
 
 ## Goal
 

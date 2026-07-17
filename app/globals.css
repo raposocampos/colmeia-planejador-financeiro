@@ -1603,6 +1603,27 @@ td {
   font-size: 0.7rem;
 }
 
+.category-pills > span.is-dragging {
+  border-color: var(--honey-deep);
+  box-shadow: 0 5px 18px rgb(35 31 32 / 14%);
+  opacity: 0.78;
+}
+
+.category-order-help {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+}
+
+.category-pills .category-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.category-pills .category-drag-handle:active {
+  cursor: grabbing;
+}
+
 .category-pills i {
   width: 8px;
   height: 8px;
@@ -1612,6 +1633,17 @@ td {
 .category-pills button {
   width: 25px;
   height: 25px;
+}
+
+.form-error {
+  margin: 0;
+  border-left: 3px solid var(--danger);
+  border-radius: 8px;
+  background: #fff1ef;
+  padding: 0.75rem;
+  color: #7d251b;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .privacy-facts {

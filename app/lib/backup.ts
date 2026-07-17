@@ -30,6 +30,7 @@ const category = base.extend({
   color: z.string(),
   icon: z.string(),
   archived: z.boolean(),
+  sortOrder: z.number().int().nonnegative().optional(),
 });
 const transaction = base.extend({
   type: z.enum(["income", "expense", "transfer"]),

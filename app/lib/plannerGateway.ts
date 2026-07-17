@@ -21,6 +21,8 @@ export const removeRecord = (table: PlannerTable, id: string): Promise<void> =>
   activeRepository.removeRecord(table, id);
 export const saveSettings = (settings: AppSettings): Promise<void> =>
   activeRepository.saveSettings(settings);
+export const reorderCategories = (categoryIds: string[]): Promise<void> =>
+  activeRepository.reorderCategories(categoryIds);
 export const replacePlannerState = (state: PlannerState): Promise<void> =>
   activeRepository.replaceState(state);
 export const clearPlannerData = (): Promise<void> => activeRepository.clear();

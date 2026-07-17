@@ -58,6 +58,7 @@ const categoryToRemote = (record: Category) => ({
   color: record.color,
   icon: record.icon,
   archived: record.archived,
+  sort_order: record.sortOrder ?? null,
 });
 const transactionToRemote = (record: Transaction) => ({
   ...baseToRemote(record),
@@ -162,6 +163,10 @@ export class SupabasePlannerRepository implements PlannerRepository {
         color: text(row, "color"),
         icon: text(row, "icon"),
         archived: boolean(row, "archived"),
+        sortOrder:
+          row.sort_order === null || row.sort_order === undefined
+            ? undefined
+            : number(row, "sort_order"),
       })),
       transactions: ((transactions.data ?? []) as RemoteRow[]).map((row) => ({
         ...baseFromRemote(row),
@@ -257,6 +262,15 @@ export class SupabasePlannerRepository implements PlannerRepository {
     this.upsert("categories", categoryToRemote(record), () =>
       this.cache.saveCategory(record),
     );
+
+  async reorderCategories(categoryIds: string[]): Promise<void> {
+    await this.assertSession();
+    const { error } = await this.client.rpc("reorder_categories", {
+      ordered_ids: categoryIds,
+    });
+    requireNoError(error);
+    await this.cache.reorderCategories(categoryIds);
+  }
 
   async saveSettings(settings: AppSettings): Promise<void> {
     await this.upsert(
