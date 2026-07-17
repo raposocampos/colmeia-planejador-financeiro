@@ -4,7 +4,7 @@
 
 **Preparação de staging autorizada por Lucas Campos em: 16/07/2026**
 
-**Produção autorizada por Lucas Campos em: ____**
+**Produção autorizada por Lucas Campos em: 16/07/2026**
 
 Sem data, identificação da aprovação e checklist revisado para o ambiente pretendido,
 pare. A autorização de staging não autoriza merge nem produção.
@@ -23,16 +23,21 @@ pare. A autorização de staging não autoriza merge nem produção.
    fica disponível se o workflow existir na branch padrão.
 8. Manter `main`, o Sites público e o ambiente `github-pages` intocados.
 
-## Pré-publicação futura
+## Pré-publicação e produção
 
 1. Revisar `docs/approvals/auth-onboarding-v2-review.md` e obter `APROVADO` explícito.
 2. Validar Termos e Privacidade juridicamente.
 3. Criar projeto Supabase do ambiente, aplicar migrations e testar RLS A/B/anônimo.
-4. Configurar SMTP, Google OAuth, URLs de callback e política de senhas.
+4. Configurar SMTP, URLs de callback e política de senhas. Manter Google OAuth
+   oculto enquanto o provedor não estiver validado.
 5. Configurar somente secrets/variáveis do ambiente de hospedagem.
-6. Executar instalação limpa, typecheck, lint, formato, testes, E2E, builds, migrations,
-   segredos e auditoria.
-7. Publicar primeiro em staging autorizado; executar QA desktop/mobile e migração.
-8. Aprovar janela, backup e rollback antes de produção.
-
-Nenhum passo desta preparação publica em produção.
+6. No Sites, carregar `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `NEXT_PUBLIC_SITE_URL` do ambiente hospedado
+   durante `pnpm build`; essas variáveis públicas são compiladas no bundle cliente
+   e nunca devem ser copiadas para `.env` versionado.
+7. Executar instalação limpa, typecheck, lint, formato, testes, E2E, builds,
+   migrations, segredos e auditoria.
+8. Publicar primeiro em staging autorizado; executar QA desktop/mobile e migração.
+9. Aprovar janela, backup e rollback antes de produção.
+10. Após publicar, validar login, rotas, console, responsividade e conexão com o
+    projeto Supabase correto em Sites e GitHub Pages.
