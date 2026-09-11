@@ -44,7 +44,9 @@ test("novo usuário confirma sessão simulada, vê onboarding e chega ao painel 
   ).toBeVisible();
   await page.getByRole("button", { name: "Simular e-mail confirmado" }).click();
   await completeOnboarding(page);
-  await expect(page.getByRole("heading", { name: "Bom dia, Lucas!" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Seu dinheiro, com mais clareza." }),
+  ).toBeVisible();
   await expect(page.getByText("Ainda não há despesas neste mês")).toBeVisible();
 });
 
@@ -54,7 +56,9 @@ test("onboarding concluído leva diretamente ao painel", async ({ page }) => {
     localStorage.setItem("colmeia-review-onboarding", "true");
   });
   await page.goto("/?review=flow");
-  await expect(page.getByRole("heading", { name: "Bom dia, Lucas!" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Seu dinheiro, com mais clareza." }),
+  ).toBeVisible();
   await expect(page.getByTestId("onboarding-v2")).toHaveCount(0);
 });
 
@@ -69,7 +73,9 @@ test("manter conectado usa armazenamento persistente e sobrevive à recarga", as
   await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
   await completeOnboarding(page);
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Bom dia, Lucas!" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Seu dinheiro, com mais clareza." }),
+  ).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("colmeia-review-session")),
   ).toBe("confirmed");
@@ -327,22 +333,48 @@ test("painel gerencial se adapta ao celular sem cortar cartões ou a página", a
   for (const width of [320, 360, 390, 430]) {
     await page.setViewportSize({ width, height: 820 });
     await page.goto("/?review=migrated");
-    await expect(page.getByRole("heading", { name: /Bom dia, Lucas/ })).toBeVisible();
-    await expect(page.locator(".manager-metric")).toHaveCount(4);
+    await expect(
+      page.getByRole("heading", { name: /Seu dinheiro, com mais clareza/ }),
+    ).toBeVisible();
+    await expect(page.locator(".dashboard-kpi")).toHaveCount(4);
     await expect(page.locator(".manager-cashflow__plot > button")).toHaveCount(6);
     const layout = await page.evaluate(() => ({
       bodyOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
-      clippedCards: [...document.querySelectorAll<HTMLElement>(".manager-metric")].some(
-        (card) => card.getBoundingClientRect().right > window.innerWidth + 1,
-      ),
+      clippedSummary: [
+        ...document.querySelectorAll<HTMLElement>(
+          ".dashboard-overview, .dashboard-kpi, .dashboard-period-control",
+        ),
+      ].some((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.left < -1 || rect.right > window.innerWidth + 1;
+      }),
       chartScrollable:
         document.querySelector<HTMLElement>(".manager-cashflow")!.scrollWidth >
         document.querySelector<HTMLElement>(".manager-cashflow")!.clientWidth,
     }));
     expect(layout.bodyOverflow).toBe(false);
-    expect(layout.clippedCards).toBe(false);
+    expect(layout.clippedSummary).toBe(false);
     expect(layout.chartScrollable).toBe(true);
   }
+});
+
+test("perfil do topo abre as configurações por clique e teclado", async ({ page }) => {
+  await page.goto("/?review=migrated");
+  const profile = page.getByRole("button", {
+    name: "Abrir configurações de Lucas",
+  });
+  await expect(profile).toBeVisible();
+  await profile.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
+});
+
+test("topo editorial fica restrito à Visão Geral", async ({ page }) => {
+  await page.goto("/?review=transactions");
+  await expect(page.getByRole("heading", { name: "Transações" })).toBeVisible();
+  await expect(page.locator(".dashboard-overview")).toHaveCount(0);
+  await expect(page.locator(".dashboard-period-control")).toHaveCount(0);
+  await expect(page.locator(".topbar")).not.toHaveClass(/topbar--dashboard/);
 });
 
 test("acabamento do painel mantém pontos circulares e ações sem colisões", async ({
@@ -354,7 +386,7 @@ test("acabamento do painel mantém pontos circulares e ações sem colisões", a
   for (const width of widths) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/?review=migrated");
-    const periodInput = page.locator('.manager-month-picker input[type="month"]');
+    const periodInput = page.locator('.dashboard-period-control input[type="month"]');
     const anchorMonth = await periodInput.inputValue();
 
     await page.getByRole("button", { name: "12 meses" }).click();
@@ -391,13 +423,26 @@ test("acabamento do painel mantém pontos circulares e ações sem colisões", a
         const rect = point.getBoundingClientRect();
         return { width: rect.width, height: rect.height };
       });
-      const metric = [
-        ...document.querySelectorAll<HTMLElement>(".manager-metric"),
-      ].find((card) => card.textContent?.includes("Comprometimento"));
-      const metricLabel = metric?.querySelector<HTMLElement>(".manager-metric__label");
-      const metricTooltip = metric?.querySelector<HTMLElement>(
-        ".info-tooltip > button",
-      );
+      const summaryCollisions = [
+        ...document.querySelectorAll<HTMLElement>(".dashboard-kpi"),
+      ].flatMap((metric) => {
+        const metricRect = metric.getBoundingClientRect();
+        return [
+          ...metric.querySelectorAll<HTMLElement>(
+            ":scope > span, :scope > strong, :scope > small",
+          ),
+        ]
+          .filter((element) => {
+            const rect = element.getBoundingClientRect();
+            return (
+              rect.left < metricRect.left - 1 ||
+              rect.right > metricRect.right + 1 ||
+              rect.top < metricRect.top - 1 ||
+              rect.bottom > metricRect.bottom + 1
+            );
+          })
+          .map((element) => element.textContent?.trim() ?? "indicador");
+      });
       const headerCollisions = [
         ...document.querySelectorAll<HTMLElement>(".manager-panel__header"),
       ].flatMap((header) => {
@@ -412,13 +457,7 @@ test("acabamento do painel mantém pontos circulares e ações sem colisões", a
       });
       return {
         pointSizes,
-        metricCollision:
-          metricLabel && metricTooltip
-            ? overlaps(
-                metricLabel.getBoundingClientRect(),
-                metricTooltip.getBoundingClientRect(),
-              )
-            : true,
+        summaryCollisions,
         headerCollisions,
         documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
       };
@@ -430,20 +469,28 @@ test("acabamento do painel mantém pontos circulares e ações sem colisões", a
       expect(point.width).toBeGreaterThanOrEqual(11.5);
       expect(point.width).toBeLessThanOrEqual(12.5);
     }
-    expect(layout.metricCollision).toBe(false);
+    expect(layout.summaryCollisions).toEqual([]);
     expect(layout.headerCollisions).toEqual([]);
     expect(layout.documentOverflow).toBe(false);
 
-    const firstMetricTooltip = page.locator(".manager-metric .info-tooltip").first();
-    await firstMetricTooltip.getByRole("button").click();
-    const bubble = firstMetricTooltip.getByRole("tooltip");
-    await expect(bubble).toBeVisible();
-    const bubbleBox = await bubble.boundingBox();
-    if (!bubbleBox) throw new Error("tooltip do indicador ausente");
-    expect(bubbleBox.x).toBeGreaterThanOrEqual(15);
-    expect(bubbleBox.x + bubbleBox.width).toBeLessThanOrEqual(width - 15);
-    await page.keyboard.press("Escape");
-    await expect(bubble).toBeHidden();
+    const activeMonth = months.last();
+    await activeMonth.click();
+    const activeTooltip = activeMonth.locator(".manager-cashflow__tooltip");
+
+    if (testInfo.project.name === "desktop") {
+      await expect(activeTooltip).toBeVisible();
+      await page.mouse.move(1, 1);
+      await expect(activeTooltip).toBeHidden();
+      await activeMonth.hover();
+      await expect(activeTooltip).toBeVisible();
+      await page.mouse.move(1, 1);
+      await expect(activeTooltip).toBeHidden();
+      await activeMonth.press("ArrowLeft");
+      const keyboardTooltip = months.nth(10).locator(".manager-cashflow__tooltip");
+      await expect(keyboardTooltip).toBeVisible();
+    } else {
+      await expect(activeTooltip).toBeHidden();
+    }
   }
 });
 

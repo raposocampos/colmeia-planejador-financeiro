@@ -114,3 +114,20 @@ Evidências visuais adicionadas:
 - `docs/quality/screenshots/v2/login-tablet.png`
 - `docs/quality/screenshots/v2/reports-desktop.png`
 - `docs/quality/screenshots/v2/reports-mobile.png`
+
+## Manutenção de 11/09/2026 — topo editorial e tooltip sob demanda
+
+- [x] Topo “Seu dinheiro, com mais clareza” aplicado somente à Visão Geral.
+- [x] Mês, nova transação e perfil reposicionados conforme a composição aprovada.
+- [x] Perfil abre Configurações por clique, `Enter` e foco visível.
+- [x] Saldo e faixa editorial usam contas e movimentações existentes do mês selecionado.
+- [x] Estado textual cobre mês vazio, saldo positivo, equilibrado e negativo.
+- [x] Celular preserva menu, marca e avatar no primeiro nível e mostra o mês na segunda linha.
+- [x] Tooltip do fluxo aparece em `hover` ou foco de teclado e não persiste após clique/toque.
+- [x] Visão Geral validada em 1280, 1440, 320, 360, 390 e 430 px sem overflow ou colisões.
+- [x] Transações, Contas e cartões e demais abas mantiveram cabeçalhos e distribuição.
+- [x] Unitários/componentes: 53 aprovados em 15 arquivos.
+- [x] Playwright: 30 aprovados e 4 skips específicos de viewport.
+- [x] TypeScript, ESLint, migrações, segredos e builds de Sites/GitHub Pages aprovados.
+- [x] Arquivos alterados aprovados pelo Prettier; baseline global legado permanece fora deste escopo.
+- [x] Detector Impeccable executado sem achados.
