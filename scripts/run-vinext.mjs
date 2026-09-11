@@ -7,6 +7,23 @@ if (!["dev", "build", "start"].includes(mode)) {
   process.exit(2);
 }
 
+if (mode === "build") {
+  const requiredPublicVariables = [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  ];
+  const missingVariables = requiredPublicVariables.filter(
+    (name) => !process.env[name]?.trim(),
+  );
+
+  if (missingVariables.length > 0) {
+    console.error(
+      `Build interrompido: configure ${missingVariables.join(", ")} antes de gerar o pacote de produção.`,
+    );
+    process.exit(2);
+  }
+}
+
 const executable = resolve("node_modules/vinext/dist/cli.js");
 const child = spawn(process.execPath, [executable, mode], {
   stdio: "inherit",
