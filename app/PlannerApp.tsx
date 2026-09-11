@@ -16,7 +16,9 @@ import {
   ArrowUpRight,
   BarChart3,
   BellRing,
+  CalendarDays,
   ChartNoAxesCombined,
+  ChevronDown,
   ChevronRight,
   CircleDollarSign,
   Copy,
@@ -80,6 +82,7 @@ import {
   projectMonth,
   shiftMonth,
   summarizeMonth,
+  totalBalance,
   transactionsInMonth,
 } from "./lib/calculations";
 import {
@@ -178,6 +181,38 @@ const shortMonthLabel = (month: string): string => {
   return new Intl.DateTimeFormat("pt-BR", { month: "short" })
     .format(new Date(year, monthNumber - 1, 1))
     .replace(".", "");
+};
+
+const sentenceMonthLabel = (month: string): string => {
+  const label = monthLabel(month);
+  return label.charAt(0).toLocaleUpperCase("pt-BR") + label.slice(1);
+};
+
+interface DashboardNarrativeInput {
+  month: string;
+  movementCount: number;
+  income: number;
+  expense: number;
+  result: number;
+}
+
+const dashboardNarrative = ({
+  month,
+  movementCount,
+  income,
+  expense,
+  result,
+}: DashboardNarrativeInput): string => {
+  const period = sentenceMonthLabel(month);
+  if (movementCount === 0)
+    return `${period} ainda não tem movimentações. Registre entradas e saídas para começar sua leitura financeira.`;
+  if (expense > 0 && income === 0)
+    return `${period} reúne despesas, mas ainda não tem receitas pagas. Confira os registros e organize um próximo passo possível.`;
+  if (result < 0)
+    return `${period} mostra despesas acima das receitas. Reveja as maiores categorias e escolha um próximo passo com calma.`;
+  if (result > 0)
+    return `${period} está com receitas acima das despesas até agora. Acompanhe as prioridades para manter esse equilíbrio.`;
+  return `${period} está equilibrado entre receitas e despesas pagas. Continue acompanhando as movimentações do mês.`;
 };
 
 const budgetPeriodLabel = (budget: Budget): string => {
@@ -443,6 +478,8 @@ export default function PlannerApp({
     () => transactionsInMonth(state.transactions, month),
     [state.transactions, month],
   );
+  const firstName = profile.name.trim().split(/\s+/)[0] || "você";
+  const profileInitial = firstName.charAt(0).toLocaleUpperCase("pt-BR") || "C";
   const filteredTransactions = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("pt-BR");
     return sortTransactions(state.transactions).filter((item) => {
@@ -762,7 +799,6 @@ export default function PlannerApp({
     );
 
   const renderDashboard = () => {
-    const firstName = profile.name.trim().split(/\s+/)[0] || "você";
     const trend = monthlyTrend(state.transactions, month, dashboardRange);
     const insights = buildDashboardInsights(
       state.transactions,
@@ -797,63 +833,121 @@ export default function PlannerApp({
       const value = comparisonPercent(current, previous);
       return `${value > 0 ? "+" : ""}${value}% vs. mês anterior`;
     };
-    const commitmentDifference = summary.committed - previousSummary.committed;
+    const movementCount = selectedMonthTransactions.length;
+    const pendingCount = selectedMonthTransactions.filter(
+      (item) => item.status === "pending",
+    ).length;
+    const activeAccountCount = state.accounts.filter(
+      (account) => !account.archived,
+    ).length;
+    const balance = totalBalance(state.accounts, state.transactions);
+    const expenseDetail =
+      summary.income > 0
+        ? `${summary.committed}% da renda do mês`
+        : summary.expense > 0
+          ? "Sem receita paga registrada"
+          : "Sem movimentação paga";
+    const resultDetail =
+      movementCount === 0
+        ? "Aguardando movimentações."
+        : summary.result < 0
+          ? "Vale revisar as maiores categorias."
+          : summary.result > 0
+            ? "Receitas acima das despesas."
+            : "Receitas e despesas equilibradas.";
     const selectedCategoryName = state.categories.find(
       (category) => category.id === dashboardCategory,
     )?.name;
     return (
       <>
-        <section className="manager-heading">
-          <div>
-            <h1>Bom dia, {firstName}!</h1>
-            <p>Disciplina hoje, liberdade amanhã.</p>
-          </div>
-          <label className="manager-month-picker">
-            <span>Mês da visão</span>
-            <input
-              type="month"
-              value={month}
-              onChange={(event) => {
-                setMonth(event.target.value);
-                setDashboardActiveMonth(event.target.value);
-              }}
-            />
-          </label>
-        </section>
+        <section className="dashboard-overview" aria-labelledby="dashboard-title">
+          <div className="dashboard-overview__hero">
+            <div className="dashboard-overview__intro">
+              <p className="dashboard-overview__eyebrow">Sua Colmeia financeira</p>
+              <h1 id="dashboard-title">
+                <span>Seu dinheiro,</span>
+                <span>com mais clareza.</span>
+              </h1>
+              <p className="dashboard-overview__narrative">
+                {dashboardNarrative({
+                  month,
+                  movementCount,
+                  income: summary.income,
+                  expense: summary.expense,
+                  result: summary.result,
+                })}
+              </p>
+              <div className="dashboard-overview__actions">
+                <button
+                  className="button"
+                  type="button"
+                  disabled={!online}
+                  onClick={() => setModal({ kind: "transaction" })}
+                >
+                  <Plus size={18} /> Nova transação
+                </button>
+                <button
+                  className="text-button"
+                  type="button"
+                  onClick={() => goTo("reports")}
+                >
+                  Ver relatórios <ChevronRight size={17} />
+                </button>
+              </div>
+            </div>
 
-        <section className="manager-metrics" aria-label="Resumo do mês">
-          <MetricCard
-            icon={TrendingUp}
-            label="Receitas"
-            value={formatBRL(summary.income)}
-            detail={comparisonCopy(summary.income, previousSummary.income)}
-            tooltip="Soma das receitas pagas no mês selecionado. Transferências não entram neste indicador."
-            tone="income"
-          />
-          <MetricCard
-            icon={TrendingDown}
-            label="Despesas"
-            value={formatBRL(summary.expense)}
-            detail={comparisonCopy(summary.expense, previousSummary.expense)}
-            tooltip="Soma das despesas pagas no mês selecionado. Compromissos pendentes aparecem separadamente."
-            tone="expense"
-          />
-          <MetricCard
-            icon={CircleDollarSign}
-            label="Saldo do mês"
-            value={formatBRL(summary.result)}
-            detail={comparisonCopy(summary.result, previousSummary.result)}
-            tooltip="Receitas pagas menos despesas pagas no mês. Este valor não é o saldo total das suas contas."
-            tone="balance"
-          />
-          <MetricCard
-            icon={Gauge}
-            label="Comprometimento"
-            value={`${summary.committed}%`}
-            detail={`${commitmentDifference > 0 ? "+" : ""}${commitmentDifference} p.p. vs. mês anterior`}
-            tooltip="Percentual das receitas pagas consumido pelas despesas pagas. Pode ultrapassar 100% quando as despesas são maiores que a renda do mês."
-            tone="commitment"
-          />
+            <div className="dashboard-overview__balance">
+              <div className="dashboard-overview__symbol" aria-hidden="true">
+                <BrandMark compact />
+              </div>
+              <p className="dashboard-overview__quote" aria-hidden="true">
+                Disciplina hoje,
+                <br />
+                mais escolhas amanhã.
+              </p>
+              <div className="dashboard-overview__balance-copy">
+                <span>Saldo total</span>
+                <strong>{formatBRL(balance)}</strong>
+                <small>
+                  <Landmark size={18} aria-hidden="true" /> Somando {activeAccountCount}{" "}
+                  {activeAccountCount === 1 ? "conta ativa" : "contas ativas"}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboard-kpis" aria-label="Resumo do mês">
+            <article className="dashboard-kpi dashboard-kpi--income">
+              <span>Receitas</span>
+              <strong>{formatBRL(summary.income)}</strong>
+              <small>
+                <TrendingUp size={17} aria-hidden="true" />
+                {comparisonCopy(summary.income, previousSummary.income)}
+              </small>
+            </article>
+            <article className="dashboard-kpi dashboard-kpi--expense">
+              <span>Despesas</span>
+              <strong>{formatBRL(summary.expense)}</strong>
+              <small>
+                <TrendingDown size={17} aria-hidden="true" /> {expenseDetail}
+              </small>
+            </article>
+            <article
+              className={`dashboard-kpi dashboard-kpi--result${summary.result < 0 ? " dashboard-kpi--negative" : ""}`}
+            >
+              <span>Resultado do mês</span>
+              <strong>{formatBRL(summary.result)}</strong>
+              <small>{resultDetail}</small>
+            </article>
+            <article className="dashboard-kpi dashboard-kpi--movements">
+              <span>Movimentações</span>
+              <strong>{movementCount}</strong>
+              <small>
+                <ReceiptText size={16} aria-hidden="true" /> {pendingCount}{" "}
+                {pendingCount === 1 ? "pendente" : "pendentes"}
+              </small>
+            </article>
+          </div>
         </section>
 
         <section className="manager-dashboard">
@@ -2313,7 +2407,9 @@ export default function PlannerApp({
         />
       )}
       <div className="app-main">
-        <header className="topbar">
+        <header
+          className={`topbar${activeNav === "dashboard" ? " topbar--dashboard" : ""}`}
+        >
           <button
             className="mobile-menu"
             type="button"
@@ -2326,6 +2422,22 @@ export default function PlannerApp({
             <BrandMark compact />
             <strong>COLMEIA</strong>
           </div>
+          {activeNav === "dashboard" && (
+            <label className="dashboard-period-control">
+              <span aria-hidden="true">{sentenceMonthLabel(month)}</span>
+              <CalendarDays size={17} aria-hidden="true" />
+              <ChevronDown size={15} aria-hidden="true" />
+              <input
+                type="month"
+                aria-label="Mês da visão"
+                value={month}
+                onChange={(event) => {
+                  setMonth(event.target.value);
+                  setDashboardActiveMonth(event.target.value);
+                }}
+              />
+            </label>
+          )}
           <div className="topbar-actions">
             <button
               className="quick-add"
@@ -2335,22 +2447,21 @@ export default function PlannerApp({
             >
               <Plus size={18} /> <span>Nova transação</span>
             </button>
-            <span
-              className="profile-badge"
-              aria-label={`Perfil de ${profile.name}`}
-              title={profile.name}
+            <button
+              className="profile-control"
+              type="button"
+              aria-label={`Abrir configurações de ${firstName}`}
+              title={`Configurações de ${firstName}`}
+              onClick={() => goTo("settings")}
             >
-              {profile.name
-                .split(/\s+/)
-                .slice(0, 2)
-                .map((part) => part[0])
-                .join("")
-                .toUpperCase()}
-            </span>
-            <span className="profile-summary" aria-hidden="true">
-              <small>Olá,</small>
-              <strong>{profile.name}</strong>
-            </span>
+              <span className="profile-badge" aria-hidden="true">
+                {profileInitial}
+              </span>
+              <span className="profile-summary" aria-hidden="true">
+                <small>Olá,</small>
+                <strong>{firstName}</strong>
+              </span>
+            </button>
           </div>
         </header>
         {!online && (
