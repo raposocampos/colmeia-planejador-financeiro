@@ -130,6 +130,21 @@ test("layout de autenticação e painel funciona no viewport do projeto", async 
 }) => {
   await page.goto("/?review=login");
   await expect(page.getByRole("heading", { name: "Entrar na Colmeia" })).toBeVisible();
+  const loginSpacing = await page.evaluate(() => {
+    const card = document.querySelector<HTMLElement>(".auth-card");
+    const input = document.querySelector<HTMLElement>(".auth-input");
+    if (!card || !input) throw new Error("formulário de login ausente");
+    const cardRect = card.getBoundingClientRect();
+    const inputRect = input.getBoundingClientRect();
+    return {
+      left: inputRect.left - cardRect.left,
+      right: cardRect.right - inputRect.right,
+      viewportOverflow: Math.max(0, cardRect.right - window.innerWidth),
+    };
+  });
+  expect(loginSpacing.left).toBeGreaterThanOrEqual(16);
+  expect(loginSpacing.right).toBeGreaterThanOrEqual(16);
+  expect(loginSpacing.viewportOverflow).toBe(0);
   await page.goto("/?review=profile");
   await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
   await expect(page.getByText("Perfil e sessão")).toBeVisible();
@@ -197,8 +212,10 @@ test("salva orçamento e usa apenas categorias configuradas", async ({ page }) =
   await expect(category).toHaveValue("moradia");
   await expect(category.getByRole("option", { name: "Sem categoria" })).toHaveCount(0);
   await page.getByLabel("Limite planejado").fill("500");
+  await page.getByLabel("Duração do planejamento").selectOption("3");
   await page.getByTestId("modal-save").click();
   await expect(page.getByRole("heading", { name: "Moradia" })).toBeVisible();
+  await expect(page.locator(".budget-card", { hasText: "Moradia" })).toContainText("–");
 
   await page.getByRole("button", { name: "Transações", exact: true }).last().click();
   await page.getByRole("button", { name: "Nova transação" }).first().click();
@@ -207,6 +224,73 @@ test("salva orçamento e usa apenas categorias configuradas", async ({ page }) =
       name: "Sem categoria",
     }),
   ).toHaveCount(0);
+});
+
+test("relatórios formam um dashboard interativo sem estourar o viewport", async ({
+  page,
+}) => {
+  await page.goto("/?review=reports");
+  await expect(page.getByRole("heading", { name: "Relatórios" })).toBeVisible();
+  await expect(page.getByText("Fluxo dos últimos 6 meses")).toBeVisible();
+
+  const months = page.locator(".cashflow-chart button");
+  await expect(months).toHaveCount(6);
+  const selectedMonth = await months.nth(4).getAttribute("data-month");
+  if (!selectedMonth) throw new Error("mês interativo ausente");
+  await months.nth(4).click();
+  await expect(
+    page.locator(`.cashflow-chart button[data-month="${selectedMonth}"]`),
+  ).toHaveAttribute("aria-pressed", "true");
+
+  const layout = await page.evaluate(() => {
+    const dashboard = document.querySelector<HTMLElement>(".report-dashboard");
+    const panels = [...document.querySelectorAll<HTMLElement>(".report-panel")];
+    if (!dashboard || !panels.length) throw new Error("dashboard ausente");
+    return {
+      dashboardRight: dashboard.getBoundingClientRect().right,
+      viewportWidth: window.innerWidth,
+      panelOverflow: panels.some(
+        (panel) => panel.getBoundingClientRect().right > window.innerWidth + 1,
+      ),
+    };
+  });
+  expect(layout.dashboardRight).toBeLessThanOrEqual(layout.viewportWidth + 1);
+  expect(layout.panelOverflow).toBe(false);
+});
+
+test("cabeçalho e navegação inferior ficam centralizados no celular", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "validação específica do celular");
+  await page.goto("/?review=migrated");
+
+  const menu = page.locator(".mobile-menu");
+  const menuIcon = menu.locator("svg");
+  const brand = page.locator(".mobile-brand");
+  const buttons = page.locator(".bottom-nav button:visible");
+  await expect(buttons).toHaveCount(5);
+  const [menuBox, iconBox, brandBox] = await Promise.all([
+    menu.boundingBox(),
+    menuIcon.boundingBox(),
+    brand.boundingBox(),
+  ]);
+  if (!menuBox || !iconBox || !brandBox) throw new Error("cabeçalho móvel ausente");
+  expect(
+    Math.abs(menuBox.x + menuBox.width / 2 - (iconBox.x + iconBox.width / 2)),
+  ).toBeLessThanOrEqual(1);
+  const viewportWidth = await page.evaluate(() => window.innerWidth);
+  expect(
+    Math.abs(viewportWidth / 2 - (brandBox.x + brandBox.width / 2)),
+  ).toBeLessThanOrEqual(1);
+  for (const button of await buttons.all()) {
+    const box = await button.boundingBox();
+    if (!box) throw new Error("botão móvel ausente");
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewportWidth + 1);
+    expect(box.width).toBeGreaterThanOrEqual(60);
+  }
+
+  await expect(page.getByText("Próximo desconto · mensal")).toBeVisible();
 });
 
 test("reordena categorias pelo teclado e mantém a lista configurada", async ({

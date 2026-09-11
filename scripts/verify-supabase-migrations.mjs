@@ -79,6 +79,22 @@ if (
   )
 )
   failures.push("Ordenação persistente de categorias ausente.");
+if (
+  !/alter table public\.budgets[\s\S]*?add column if not exists duration_months smallint not null default 1/i.test(
+    sql,
+  )
+)
+  failures.push("Duração persistente do orçamento ausente.");
+if (
+  !/add constraint budgets_duration_months_check[\s\S]*?duration_months between 0 and 120/i.test(
+    sql,
+  )
+)
+  failures.push("Restrição de duração do orçamento ausente.");
+if (
+  !/insert into public\.budgets[\s\S]*?duration_months[\s\S]*?durationMonths/i.test(sql)
+)
+  failures.push("Migração de backup não preserva a duração do orçamento.");
 if (!/function public\.reorder_categories\(ordered_ids text\[\]\)/i.test(sql))
   failures.push("RPC de ordenação de categorias ausente.");
 if (

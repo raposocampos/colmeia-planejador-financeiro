@@ -81,6 +81,7 @@ const budgetToRemote = (record: Budget) => ({
   category_id: record.categoryId,
   month: record.month,
   limit_cents: record.limitCents,
+  duration_months: record.durationMonths ?? 1,
 });
 const goalToRemote = (record: Goal) => ({
   ...baseToRemote(record),
@@ -190,6 +191,10 @@ export class SupabasePlannerRepository implements PlannerRepository {
         categoryId: text(row, "category_id"),
         month: text(row, "month"),
         limitCents: number(row, "limit_cents"),
+        durationMonths:
+          row.duration_months === null || row.duration_months === undefined
+            ? 1
+            : number(row, "duration_months"),
       })),
       goals: ((goals.data ?? []) as RemoteRow[]).map((row) => ({
         ...baseFromRemote(row),

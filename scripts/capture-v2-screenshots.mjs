@@ -21,6 +21,7 @@ const browser = await chromium.launch();
 const shots = [
   ["login-desktop.png", "login", { width: 1440, height: 900 }, "Entrar na Colmeia"],
   ["login-mobile.png", "login", { width: 390, height: 844 }, "Entrar na Colmeia"],
+  ["login-tablet.png", "login", { width: 744, height: 900 }, "Entrar na Colmeia"],
   ["signup-desktop.png", "signup", { width: 1440, height: 1000 }, "Criar conta"],
   ["signup-mobile.png", "signup", { width: 390, height: 844 }, "Criar conta"],
   [
@@ -53,6 +54,14 @@ const shots = [
     { width: 1440, height: 1000 },
     "Seu dinheiro, com mais clareza.",
   ],
+  [
+    "dashboard-mobile.png",
+    "migrated",
+    { width: 390, height: 844 },
+    "Seu dinheiro, com mais clareza.",
+  ],
+  ["reports-desktop.png", "reports", { width: 1440, height: 1100 }, "Relatórios"],
+  ["reports-mobile.png", "reports", { width: 390, height: 844 }, "Relatórios"],
   ["profile-privacy.png", "profile", { width: 1440, height: 1200 }, "Configurações"],
 ];
 

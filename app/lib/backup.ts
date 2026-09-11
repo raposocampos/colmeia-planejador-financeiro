@@ -52,6 +52,7 @@ const budget = base.extend({
   categoryId: z.string(),
   month: z.string().regex(/^\d{4}-\d{2}$/),
   limitCents: z.number().int().positive(),
+  durationMonths: z.number().int().min(0).max(120).optional().default(1),
 });
 const goal = base.extend({
   name: z.string(),

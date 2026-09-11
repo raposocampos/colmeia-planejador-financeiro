@@ -29,6 +29,92 @@ export const previousMonth = (month: string): string => {
   return currentMonth(new Date(year, monthNumber - 2, 1));
 };
 
+export const shiftMonth = (month: string, amount: number): string => {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return currentMonth(new Date(year, monthNumber - 1 + amount, 1));
+};
+
+const monthDistance = (start: string, end: string): number => {
+  const [startYear, startMonth] = start.split("-").map(Number);
+  const [endYear, endMonth] = end.split("-").map(Number);
+  return (endYear - startYear) * 12 + endMonth - startMonth;
+};
+
+export const isBudgetActiveInMonth = (budget: Budget, month: string): boolean => {
+  const distance = monthDistance(budget.month, month);
+  if (distance < 0) return false;
+  const duration = budget.durationMonths ?? 1;
+  return duration === 0 || distance < duration;
+};
+
+const isoDate = (date: Date): string =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+
+const dateAtNoon = (value: string): Date => new Date(`${value.slice(0, 10)}T12:00:00`);
+
+const clampedDate = (year: number, month: number, day: number): Date => {
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, lastDay), 12);
+};
+
+export const nextOccurrenceDate = (
+  transaction: Transaction,
+  reference = new Date(),
+): string => {
+  const start = dateAtNoon(transaction.date);
+  const today = new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate(),
+    12,
+  );
+  if (transaction.recurrence === "none" || start >= today) return isoDate(start);
+
+  if (transaction.recurrence === "weekly") {
+    const elapsedDays = Math.floor((today.getTime() - start.getTime()) / 86_400_000);
+    const weeks = Math.ceil(elapsedDays / 7);
+    const candidate = new Date(start);
+    candidate.setDate(start.getDate() + weeks * 7);
+    return isoDate(candidate);
+  }
+
+  if (transaction.recurrence === "monthly") {
+    const elapsedMonths =
+      (today.getFullYear() - start.getFullYear()) * 12 +
+      today.getMonth() -
+      start.getMonth();
+    let candidate = clampedDate(
+      start.getFullYear(),
+      start.getMonth() + Math.max(0, elapsedMonths),
+      start.getDate(),
+    );
+    if (candidate < today)
+      candidate = clampedDate(
+        start.getFullYear(),
+        start.getMonth() + elapsedMonths + 1,
+        start.getDate(),
+      );
+    return isoDate(candidate);
+  }
+
+  let candidate = clampedDate(
+    Math.max(start.getFullYear(), today.getFullYear()),
+    start.getMonth(),
+    start.getDate(),
+  );
+  if (candidate < today)
+    candidate = clampedDate(
+      candidate.getFullYear() + 1,
+      start.getMonth(),
+      start.getDate(),
+    );
+  return isoDate(candidate);
+};
+
 export const transactionsInMonth = (
   transactions: Transaction[],
   month: string,
@@ -106,13 +192,14 @@ export const categoryTotals = (
 export const budgetProgress = (
   budget: Budget,
   transactions: Transaction[],
+  month = budget.month,
 ): { used: number; remaining: number; percent: number; status: string } => {
   const used = transactions
     .filter(
       (item) =>
         item.type === "expense" &&
         item.categoryId === budget.categoryId &&
-        item.date.startsWith(budget.month),
+        item.date.startsWith(month),
     )
     .reduce((total, item) => total + item.amountCents, 0);
   const percent =

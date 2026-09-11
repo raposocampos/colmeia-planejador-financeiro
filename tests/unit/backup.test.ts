@@ -17,4 +17,22 @@ describe("backup", () => {
       "Backup incompatível",
     );
   });
+
+  it("interpreta orçamento de backup antigo como plano de um mês", () => {
+    const backup = createBackup({
+      ...emptyState(),
+      budgets: [
+        {
+          id: "budget-legacy",
+          categoryId: "alimentacao",
+          month: "2026-09",
+          limitCents: 50000,
+          createdAt: "2026-09-01T12:00:00.000Z",
+          updatedAt: "2026-09-01T12:00:00.000Z",
+        },
+      ],
+    });
+    const parsed = parseBackup(JSON.stringify(backup));
+    expect(parsed.data.budgets[0].durationMonths).toBe(1);
+  });
 });

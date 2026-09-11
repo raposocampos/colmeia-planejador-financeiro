@@ -63,8 +63,11 @@ import {
   formatBRL,
   formatDate,
   goalProgress,
+  isBudgetActiveInMonth,
+  nextOccurrenceDate,
   parseMoney,
   previousMonth,
+  shiftMonth,
   summarizeMonth,
   totalBalance,
   transactionsInMonth,
@@ -138,6 +141,27 @@ const monthLabel = (month: string): string => {
     month: "long",
     year: "numeric",
   }).format(new Date(year, monthNumber - 1, 1));
+};
+
+const shortMonthLabel = (month: string): string => {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", { month: "short" })
+    .format(new Date(year, monthNumber - 1, 1))
+    .replace(".", "");
+};
+
+const budgetPeriodLabel = (budget: Budget): string => {
+  const duration = budget.durationMonths ?? 1;
+  if (duration === 0) return `Desde ${monthLabel(budget.month)} · sem prazo`;
+  if (duration === 1) return `Somente ${monthLabel(budget.month)}`;
+  return `${monthLabel(budget.month)} – ${monthLabel(shiftMonth(budget.month, duration - 1))}`;
+};
+
+const recurrenceLabel: Record<Transaction["recurrence"], string> = {
+  none: "Desconto previsto",
+  weekly: "Próximo desconto · semanal",
+  monthly: "Próximo desconto · mensal",
+  yearly: "Próximo desconto · anual",
 };
 
 const makeId = (): string =>
@@ -386,11 +410,18 @@ export default function PlannerApp({
   }, [search, state.transactions, transactionFilter]);
   const upcoming = useMemo(
     () =>
-      sortTransactions(
-        state.transactions.filter(
-          (item) => item.status === "pending" || item.recurrence !== "none",
-        ),
-      ).slice(0, 4),
+      state.transactions
+        .filter(
+          (item) =>
+            item.type === "expense" &&
+            (item.status === "pending" || item.recurrence !== "none"),
+        )
+        .map((transaction) => ({
+          transaction,
+          nextDate: nextOccurrenceDate(transaction),
+        }))
+        .sort((left, right) => left.nextDate.localeCompare(right.nextDate))
+        .slice(0, 4),
     [state.transactions],
   );
 
@@ -456,6 +487,7 @@ export default function PlannerApp({
         categoryId: values.categoryId,
         month: values.month,
         limitCents: parseMoney(values.limit),
+        durationMonths: Number(values.budgetDuration || 1),
       };
       await putRecord("budgets", record);
     }
@@ -683,7 +715,7 @@ export default function PlannerApp({
 
   const renderDashboard = () => {
     const maxCategory = Math.max(...expensesByCategory.map((item) => item.value), 1);
-    const budgets = state.budgets.filter((item) => item.month === month);
+    const budgets = state.budgets.filter((item) => isBudgetActiveInMonth(item, month));
     return (
       <>
         <section className="hero-summary" key={"hero-" + month}>
@@ -876,7 +908,7 @@ export default function PlannerApp({
             </header>
             <div className="compact-list">
               {budgets.slice(0, 3).map((budget) => {
-                const progress = budgetProgress(budget, state.transactions);
+                const progress = budgetProgress(budget, state.transactions, month);
                 const category = state.categories.find(
                   (item) => item.id === budget.categoryId,
                 );
@@ -1015,18 +1047,14 @@ export default function PlannerApp({
               <BellRing size={19} />
             </header>
             <div className="upcoming-list">
-              {upcoming.map((item) => (
-                <div key={item.id}>
-                  <span className="date-badge">
-                    {formatDate(item.date).slice(0, 5)}
-                  </span>
+              {upcoming.map(({ transaction, nextDate }) => (
+                <div key={transaction.id}>
+                  <span className="date-badge">{formatDate(nextDate).slice(0, 5)}</span>
                   <p>
-                    <strong>{item.description}</strong>
-                    <small>
-                      {item.status === "pending" ? "Pendente" : "Recorrente"}
-                    </small>
+                    <strong>{transaction.description}</strong>
+                    <small>{recurrenceLabel[transaction.recurrence]}</small>
                   </p>
-                  <b>{formatBRL(item.amountCents)}</b>
+                  <b>{formatBRL(transaction.amountCents)}</b>
                 </div>
               ))}
               {!upcoming.length && (
@@ -1277,7 +1305,7 @@ export default function PlannerApp({
   );
 
   const renderBudgets = () => {
-    const visible = state.budgets.filter((item) => item.month === month);
+    const visible = state.budgets.filter((item) => isBudgetActiveInMonth(item, month));
     return (
       <>
         <PageHeader
@@ -1300,7 +1328,7 @@ export default function PlannerApp({
         </div>
         <section className="budget-grid">
           {visible.map((budget) => {
-            const progress = budgetProgress(budget, state.transactions);
+            const progress = budgetProgress(budget, state.transactions, month);
             const category = state.categories.find(
               (item) => item.id === budget.categoryId,
             );
@@ -1311,7 +1339,7 @@ export default function PlannerApp({
                     <Tag size={20} />
                   </span>
                   <div>
-                    <p>Orçamento mensal</p>
+                    <p>{budgetPeriodLabel(budget)}</p>
                     <h2>{category?.name ?? "Categoria"}</h2>
                   </div>
                   <div className="card-menu">
@@ -1474,19 +1502,44 @@ export default function PlannerApp({
   );
 
   const renderReports = () => {
-    const filtered = state.transactions.filter(
+    const scopedTransactions = state.transactions.filter(
       (item) =>
-        item.date.startsWith(reportMonth) &&
         (!reportCategory || item.categoryId === reportCategory) &&
         (!reportAccount || item.accountId === reportAccount) &&
         (!reportCard || item.creditCardId === reportCard),
     );
+    const filtered = scopedTransactions.filter((item) =>
+      item.date.startsWith(reportMonth),
+    );
     const reportSummary = summarizeMonth(filtered, reportMonth);
+    const previousSummary = summarizeMonth(
+      scopedTransactions,
+      previousMonth(reportMonth),
+    );
     const categories = categoryTotals(filtered, state.categories, reportMonth);
-    const max = Math.max(...categories.map((item) => item.value), 1);
+    const maxCategory = Math.max(...categories.map((item) => item.value), 1);
     const biggest = sortTransactions(filtered.filter((item) => item.type === "expense"))
       .sort((a, b) => b.amountCents - a.amountCents)
       .slice(0, 5);
+    const trend = Array.from({ length: 6 }, (_, index) =>
+      shiftMonth(reportMonth, index - 5),
+    ).map((trendMonth) => ({
+      month: trendMonth,
+      ...summarizeMonth(scopedTransactions, trendMonth),
+    }));
+    const maxTrend = Math.max(
+      ...trend.flatMap((item) => [item.income, item.expense]),
+      1,
+    );
+    const reportBudgets = state.budgets.filter((item) =>
+      isBudgetActiveInMonth(item, reportMonth),
+    );
+    const hasScopedFilters = Boolean(reportCategory || reportAccount || reportCard);
+    const comparison = (current: number, previous: number, suffix = "%") => {
+      const value = comparisonPercent(current, previous);
+      return `${value > 0 ? "+" : ""}${value}${suffix} vs. mês anterior`;
+    };
+    const commitmentDifference = reportSummary.committed - previousSummary.committed;
     return (
       <>
         <PageHeader
@@ -1497,99 +1550,189 @@ export default function PlannerApp({
           icon={Download}
           onAction={exportCsv}
         />
-        <section className="report-filters panel">
-          <label>
-            Mês
-            <input
-              type="month"
-              value={reportMonth}
-              onChange={(event) => setReportMonth(event.target.value)}
-            />
-          </label>
-          <label>
-            Categoria
-            <select
-              value={reportCategory}
-              onChange={(event) => setReportCategory(event.target.value)}
+        <section className="report-filters panel" aria-label="Filtros do relatório">
+          <div className="report-filters__fields">
+            <label>
+              Mês
+              <input
+                type="month"
+                value={reportMonth}
+                onChange={(event) => setReportMonth(event.target.value)}
+              />
+            </label>
+            <label>
+              Categoria
+              <select
+                value={reportCategory}
+                onChange={(event) => setReportCategory(event.target.value)}
+              >
+                <option value="">Todas</option>
+                {orderedCategories.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Conta
+              <select
+                value={reportAccount}
+                onChange={(event) => setReportAccount(event.target.value)}
+              >
+                <option value="">Todas</option>
+                {state.accounts.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Cartão
+              <select
+                value={reportCard}
+                onChange={(event) => setReportCard(event.target.value)}
+              >
+                <option value="">Todos</option>
+                {state.cards.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {hasScopedFilters && (
+            <button
+              className="text-button report-filters__clear"
+              type="button"
+              onClick={() => {
+                setReportCategory("");
+                setReportAccount("");
+                setReportCard("");
+              }}
             >
-              <option value="">Todas</option>
-              {orderedCategories.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Conta
-            <select
-              value={reportAccount}
-              onChange={(event) => setReportAccount(event.target.value)}
-            >
-              <option value="">Todas</option>
-              {state.accounts.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Cartão
-            <select
-              value={reportCard}
-              onChange={(event) => setReportCard(event.target.value)}
-            >
-              <option value="">Todos</option>
-              {state.cards.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <X size={16} /> Limpar filtros
+            </button>
+          )}
         </section>
         <section className="metric-grid report-metrics">
           <article className="metric-card">
             <p>Receitas</p>
             <strong>{formatBRL(reportSummary.income)}</strong>
+            <small>{comparison(reportSummary.income, previousSummary.income)}</small>
           </article>
           <article className="metric-card">
             <p>Despesas</p>
             <strong>{formatBRL(reportSummary.expense)}</strong>
+            <small>{comparison(reportSummary.expense, previousSummary.expense)}</small>
           </article>
           <article className="metric-card metric-card--featured">
             <p>Saldo do período</p>
             <strong>{formatBRL(reportSummary.result)}</strong>
+            <small>{comparison(reportSummary.result, previousSummary.result)}</small>
           </article>
           <article className="metric-card">
             <p>Comprometimento</p>
             <strong>{reportSummary.committed}%</strong>
+            <small>
+              {commitmentDifference > 0 ? "+" : ""}
+              {commitmentDifference} p.p. vs. mês anterior
+            </small>
           </article>
         </section>
-        <section className="dashboard-grid">
-          <article className="panel panel--wide">
+        <section className="report-dashboard">
+          <article className="panel report-panel report-panel--trend">
             <header className="panel-header">
               <div>
-                <p className="eyebrow">POR CATEGORIA</p>
+                <h2>Fluxo dos últimos 6 meses</h2>
+                <p className="panel-description">
+                  Selecione um mês para atualizar todo o relatório.
+                </p>
+              </div>
+              <div className="chart-legend" aria-label="Legenda">
+                <span>
+                  <i className="chart-legend__income" />
+                  Receitas
+                </span>
+                <span>
+                  <i className="chart-legend__expense" />
+                  Despesas
+                </span>
+              </div>
+            </header>
+            <div className="cashflow-chart" aria-label="Receitas e despesas por mês">
+              {trend.map((item) => (
+                <button
+                  key={item.month}
+                  className={item.month === reportMonth ? "active" : ""}
+                  type="button"
+                  data-month={item.month}
+                  onClick={() => setReportMonth(item.month)}
+                  aria-pressed={item.month === reportMonth}
+                  title={`${monthLabel(item.month)}: receitas ${formatBRL(item.income)}; despesas ${formatBRL(item.expense)}`}
+                >
+                  <span className="cashflow-chart__bars" aria-hidden="true">
+                    <i
+                      className="cashflow-chart__income"
+                      style={{
+                        height: item.income
+                          ? `${Math.max(5, (item.income / maxTrend) * 100)}%`
+                          : "0",
+                      }}
+                    />
+                    <i
+                      className="cashflow-chart__expense"
+                      style={{
+                        height: item.expense
+                          ? `${Math.max(5, (item.expense / maxTrend) * 100)}%`
+                          : "0",
+                      }}
+                    />
+                  </span>
+                  <strong>{shortMonthLabel(item.month)}</strong>
+                  <small>{formatBRL(item.result)}</small>
+                </button>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel report-panel report-panel--categories">
+            <header className="panel-header">
+              <div>
                 <h2>Distribuição das despesas</h2>
+                <p className="panel-description">
+                  Toque em uma categoria para filtrar o painel.
+                </p>
               </div>
             </header>
             {categories.length ? (
-              <div className="vertical-chart" aria-label="Gastos por categoria">
+              <div className="report-category-list">
                 {categories.slice(0, 7).map((item) => (
-                  <div key={item.id}>
-                    <span className="vertical-chart__value">
-                      {formatBRL(item.value)}
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={reportCategory === item.id ? "active" : ""}
+                    aria-pressed={reportCategory === item.id}
+                    onClick={() =>
+                      setReportCategory(reportCategory === item.id ? "" : item.id)
+                    }
+                  >
+                    <span className="report-category-list__name">
+                      <i style={{ background: item.color }} />
+                      {item.name}
                     </span>
-                    <i
-                      style={{
-                        height: Math.max(14, (item.value / max) * 180) + "px",
-                        background: item.color,
-                      }}
-                    />
-                    <b>{item.name}</b>
-                  </div>
+                    <span className="report-category-list__track" aria-hidden="true">
+                      <i
+                        style={{
+                          width: `${Math.max(3, (item.value / maxCategory) * 100)}%`,
+                          background: item.color,
+                        }}
+                      />
+                    </span>
+                    <strong>{formatBRL(item.value)}</strong>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -1615,17 +1758,19 @@ export default function PlannerApp({
               </table>
             </details>
           </article>
-          <article className="panel">
+          <article className="panel report-panel report-panel--ranking">
             <header className="panel-header">
               <div>
-                <p className="eyebrow">MAIORES SAÍDAS</p>
                 <h2>Despesas em destaque</h2>
+                <p className="panel-description">As maiores saídas do período.</p>
               </div>
             </header>
             <ol className="ranking-list">
-              {biggest.map((item, index) => (
+              {biggest.map((item) => (
                 <li key={item.id}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <span className="ranking-list__icon">
+                    <TrendingDown size={16} />
+                  </span>
                   <p>
                     <strong>{item.description}</strong>
                     <small>{formatDate(item.date)}</small>
@@ -1634,44 +1779,47 @@ export default function PlannerApp({
                 </li>
               ))}
             </ol>
+            {!biggest.length && (
+              <p className="muted-copy">Nenhuma despesa neste período.</p>
+            )}
           </article>
-          <article className="panel panel--wide">
+          <article className="panel report-panel report-panel--plan">
             <header className="panel-header">
               <div>
-                <p className="eyebrow">ORÇADO X REALIZADO</p>
                 <h2>Acompanhamento do plano</h2>
+                <p className="panel-description">
+                  Orçado e realizado em {monthLabel(reportMonth)}.
+                </p>
               </div>
             </header>
             <div className="compact-list">
-              {state.budgets
-                .filter((item) => item.month === reportMonth)
-                .map((budget) => {
-                  const progress = budgetProgress(budget, filtered);
-                  const category = state.categories.find(
-                    (item) => item.id === budget.categoryId,
-                  );
-                  return (
-                    <div className="progress-item" key={budget.id}>
-                      <div>
-                        <strong>{category?.name ?? "Categoria"}</strong>
-                        <span>
-                          {formatBRL(progress.used)} / {formatBRL(budget.limitCents)}
-                        </span>
-                      </div>
-                      <ProgressBar
-                        value={progress.percent}
-                        tone={progress.status as "normal" | "warning" | "exceeded"}
-                        label={
-                          (category?.name ?? "Orçamento") +
-                          ": " +
-                          progress.percent +
-                          "%"
-                        }
-                      />
+              {reportBudgets.map((budget) => {
+                const progress = budgetProgress(budget, filtered, reportMonth);
+                const category = state.categories.find(
+                  (item) => item.id === budget.categoryId,
+                );
+                return (
+                  <div className="progress-item" key={budget.id}>
+                    <div>
+                      <strong>{category?.name ?? "Categoria"}</strong>
+                      <span>
+                        {formatBRL(progress.used)} / {formatBRL(budget.limitCents)}
+                      </span>
                     </div>
-                  );
-                })}
+                    <ProgressBar
+                      value={progress.percent}
+                      tone={progress.status as "normal" | "warning" | "exceeded"}
+                      label={
+                        (category?.name ?? "Orçamento") + ": " + progress.percent + "%"
+                      }
+                    />
+                  </div>
+                );
+              })}
             </div>
+            {!reportBudgets.length && (
+              <p className="muted-copy">Nenhum orçamento ativo neste mês.</p>
+            )}
           </article>
         </section>
       </>

@@ -92,3 +92,25 @@ e aplicação/testes
 - [x] URLs públicas revalidadas sem mutação de dados financeiros reais.
 
 CI da manutenção: [29556009371](https://github.com/raposocampos/colmeia-planejador-financeiro/actions/runs/29556009371).
+
+## Manutenção de 11/09/2026 — dashboard e planejamento contínuo
+
+- [x] “Próximos compromissos” sem sobreposição e ordenado pela próxima data real de desconto.
+- [x] Relatórios refeitos como dashboard interativo, com filtros, tendência de seis meses,
+      categorias acionáveis, comparativos e acompanhamento do plano.
+- [x] Cabeçalho e navegação inferior responsivos e centralizados no celular.
+- [x] Login validado em celular, tablet e desktop, com respiro lateral adequado.
+- [x] Orçamentos com duração de 1, 3, 6 ou 12 meses e opção sem prazo.
+- [x] Backups legados mantêm duração de um mês; o novo campo é limitado entre 0 e 120.
+- [x] Unitários/componentes: 50 aprovados em 15 arquivos.
+- [x] E2E: 23 aprovados em desktop/mobile e 3 skips específicos de viewport.
+- [x] TypeScript, ESLint, verificação de migrações e busca de segredos aprovados.
+- [x] Revisão Codex Security do diff: 13 arquivos cobertos, sem achados reportáveis
+      (scan `86df48ca-bc4a-4bcb-921d-e4e02fa3770d`).
+
+Evidências visuais adicionadas:
+
+- `docs/quality/screenshots/v2/dashboard-mobile.png`
+- `docs/quality/screenshots/v2/login-tablet.png`
+- `docs/quality/screenshots/v2/reports-desktop.png`
+- `docs/quality/screenshots/v2/reports-mobile.png`
