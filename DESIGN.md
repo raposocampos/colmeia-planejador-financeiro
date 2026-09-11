@@ -42,6 +42,11 @@ Textos e controles devem atender WCAG AA. Estados nunca dependem somente de cor.
 - Uma manchete por tela e uma ação principal inequívoca.
 - Superfícies planas e regras finas antes de agrupamentos em cartões.
 - Sidebar escura fixa no desktop; navegação inferior no mobile.
+- Relatórios combinam comparação temporal e distribuição por categoria em painéis
+  interativos; gráficos usam mel para saídas e verde para entradas, sempre com
+  legenda, foco visível e alternativa tabular.
+- No mobile, marca e menu permanecem geometricamente centralizados e os cinco
+  destinos principais mantêm alvos de toque de pelo menos 44 px.
 
 ## Voz
 

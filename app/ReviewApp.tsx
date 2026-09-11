@@ -28,6 +28,7 @@ const reviewNav: Partial<Record<string, NavKey>> = {
   transactions: "transactions",
   accounts: "accounts",
   budgets: "budgets",
+  reports: "reports",
   settings: "settings",
 };
 
@@ -140,12 +141,28 @@ const migratedState = (): PlannerState => {
       updatedAt: now,
     }),
   );
+  state.transactions.push({
+    id: "review-upcoming-insurance",
+    type: "expense",
+    description: "Seguro Cartão",
+    amountCents: 990,
+    date: day(6),
+    categoryId: "outros",
+    accountId: "review-account-main",
+    tags: ["recorrente"],
+    recurrence: "monthly",
+    status: "pending",
+    demo: true,
+    createdAt: now,
+    updatedAt: now,
+  });
   state.budgets = [
     {
       id: "review-budget-home",
       categoryId: "moradia",
       month,
       limitCents: 80000,
+      durationMonths: 6,
       createdAt: now,
       updatedAt: now,
     },
@@ -154,6 +171,7 @@ const migratedState = (): PlannerState => {
       categoryId: "alimentacao",
       month,
       limitCents: 60000,
+      durationMonths: 3,
       createdAt: now,
       updatedAt: now,
     },

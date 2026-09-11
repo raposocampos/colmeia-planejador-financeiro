@@ -41,6 +41,7 @@ export interface FormValues {
   closingDay: string;
   dueDay: string;
   month: string;
+  budgetDuration: string;
   target: string;
   current: string;
   targetDate: string;
@@ -124,6 +125,7 @@ export function EntryModal({
       closingDay: recordValue(item, "closingDay") || "22",
       dueDay: recordValue(item, "dueDay") || "2",
       month: recordValue(item, "month") || currentMonth(),
+      budgetDuration: recordValue(item, "durationMonths") || "1",
       target:
         item && "targetCents" in item
           ? formatBRL(Number(item.targetCents)).replace("R$", "").trim()
@@ -414,6 +416,19 @@ export function EntryModal({
                   <input {...register("limit")} inputMode="decimal" />
                 </label>
               </div>
+              <label>
+                Duração do planejamento
+                <select {...register("budgetDuration")}>
+                  <option value="1">Somente este mês</option>
+                  <option value="3">3 meses</option>
+                  <option value="6">6 meses</option>
+                  <option value="12">12 meses</option>
+                  <option value="0">Sem prazo definido</option>
+                </select>
+                <span className="field-hint">
+                  O mesmo limite será renovado automaticamente em cada mês do período.
+                </span>
+              </label>
             </>
           )}
 

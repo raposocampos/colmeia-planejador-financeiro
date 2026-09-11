@@ -45,4 +45,23 @@ describe("modal de registros", () => {
     expect(screen.queryByRole("option", { name: "Sem categoria" })).toBeNull();
     expect(screen.queryByRole("option", { name: "Arquivada" })).toBeNull();
   });
+
+  it("oferece duração para o planejamento de orçamento", () => {
+    render(
+      <EntryModal
+        modal={{ kind: "budget" }}
+        accounts={[]}
+        cards={[]}
+        categories={categories}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+    const duration = screen.getByRole("combobox", {
+      name: /^Duração do planejamento/,
+    });
+    expect(duration).toHaveValue("1");
+    expect(screen.getByRole("option", { name: "12 meses" })).toBeVisible();
+    expect(screen.getByRole("option", { name: "Sem prazo definido" })).toBeVisible();
+  });
 });

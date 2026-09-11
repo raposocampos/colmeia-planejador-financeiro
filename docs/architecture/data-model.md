@@ -29,9 +29,11 @@ como lembrete e evita duplicações silenciosas; o usuário duplica quando desej
 
 ## Budget
 
-Categoria, mês YYYY-MM e limite em centavos. Utilizado é a soma das despesas da
-categoria no mês, incluindo pendentes para uma visão prudente. O banco valida
-`month` com o formato estrito `YYYY-MM`.
+Categoria, mês inicial YYYY-MM, limite em centavos e `duration_months`. A duração
+aceita 1 a 120 meses; zero representa um plano sem prazo. Registros legados sem o
+campo assumem um mês. Utilizado é a soma das despesas da categoria em cada mês
+ativo, incluindo pendentes para uma visão prudente. O banco valida `month` com o
+formato estrito `YYYY-MM` e a faixa da duração.
 
 ## Goal
 

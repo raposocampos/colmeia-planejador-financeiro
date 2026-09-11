@@ -21,14 +21,19 @@
 ## Planejamento
 
 - Dashboard reage a transações pagas do mês.
+- Próximos compromissos exibem a próxima data de desconto, não a data de cadastro.
 - Orçamentos exibem utilizado, restante, percentual e estado.
-- Salvar um orçamento com mês `YYYY-MM` persiste no Supabase e atualiza a tela.
+- Salvar um orçamento com mês `YYYY-MM` e duração persiste no Supabase, atualiza a
+  tela e o mantém ativo automaticamente nos meses cobertos.
 - Formulários exibem somente categorias ativas configuradas, sem a opção
   artificial “Sem categoria”.
 - Categorias podem ser reordenadas por arrastar e soltar ou por teclado; a ordem
   é preservada no banco remoto, no cache e nos backups.
 - Metas exibem percentual, restante e estimativa quando há data.
-- Relatórios respeitam os filtros combinados.
+- Relatórios respeitam os filtros combinados, com gráfico de seis meses e
+  categorias clicáveis para alterar o recorte.
+- Dashboard, login, cabeçalho e navegação inferior não geram corte ou overflow em
+  desktop, tablet ou viewport móvel de 390 px.
 
 ## Portabilidade e resiliência
 

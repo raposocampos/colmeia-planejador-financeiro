@@ -65,6 +65,8 @@ export interface Budget extends BaseRecord {
   categoryId: string;
   month: string;
   limitCents: number;
+  /** 0 mantém o orçamento ativo sem prazo; ausente preserva o legado de um mês. */
+  durationMonths?: number;
 }
 
 export interface Goal extends BaseRecord {

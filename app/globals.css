@@ -625,7 +625,7 @@
       "category transactions"
       "callout transactions"
       "goals upcoming";
-    grid-template-rows: 170px 130px 175px auto;
+    grid-template-rows: auto auto auto auto;
     gap: 0;
     margin: 0 -2.25rem;
     background: var(--surface);
@@ -1987,6 +1987,13 @@
     font-weight: 700;
   }
 
+  .field-hint {
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
   .mobile-menu,
   .mobile-brand,
   .bottom-nav {
@@ -2336,18 +2343,28 @@
   .upcoming-list > div {
     display: grid;
     grid-template-columns: auto 1fr auto;
+    min-width: 0;
     align-items: center;
     gap: 0.65rem;
   }
 
   .upcoming-list p {
     display: grid;
+    min-width: 0;
     margin: 0;
   }
 
   .upcoming-list p strong,
   .upcoming-list > div > b {
     font-size: 0.76rem;
+  }
+
+  .upcoming-list p strong {
+    overflow-wrap: anywhere;
+  }
+
+  .upcoming-list > div > b {
+    white-space: nowrap;
   }
 
   .upcoming-list p small {
@@ -2895,10 +2912,26 @@
   }
 
   .report-filters {
+    display: flex;
+    min-width: 0;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .report-filters__fields {
     display: grid;
+    min-width: 0;
+    flex: 1;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.8rem;
-    margin-bottom: 1rem;
+  }
+
+  .report-filters__clear {
+    flex: none;
+    margin-bottom: 0.1rem;
+    white-space: nowrap;
   }
 
   .report-filters label,
@@ -2915,42 +2948,204 @@
     margin-top: 0;
   }
 
-  .vertical-chart {
-    display: flex;
-    min-height: 245px;
-    align-items: flex-end;
-    justify-content: space-around;
-    gap: 0.55rem;
-    border-bottom: 1px solid var(--border);
-    padding: 1.5rem 0 0.4rem;
-  }
-
-  .vertical-chart > div {
+  .report-dashboard {
     display: grid;
-    min-width: 55px;
-    max-width: 100px;
-    flex: 1;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .report-panel {
+    min-width: 0;
+  }
+
+  .report-panel--trend {
+    grid-column: span 7;
+  }
+
+  .report-panel--categories {
+    grid-column: span 5;
+  }
+
+  .report-panel--ranking {
+    grid-column: span 5;
+  }
+
+  .report-panel--plan {
+    grid-column: span 7;
+  }
+
+  .panel-description {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  .chart-legend {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .chart-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .chart-legend i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+
+  .chart-legend__income {
+    background: var(--positive);
+  }
+
+  .chart-legend__expense {
+    background: var(--honey-deep);
+  }
+
+  .cashflow-chart {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: repeat(6, minmax(68px, 1fr));
+    align-items: stretch;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.5rem 0 0.25rem;
+    scrollbar-width: thin;
+  }
+
+  .cashflow-chart button {
+    display: grid;
+    min-width: 68px;
+    min-height: 218px;
+    grid-template-rows: 160px auto auto;
+    align-items: end;
     justify-items: center;
-    gap: 0.35rem;
+    gap: 0.3rem;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    padding: 0.55rem 0.3rem;
+    color: var(--ink-soft);
   }
 
-  .vertical-chart i {
+  .cashflow-chart button:hover,
+  .cashflow-chart button.active {
+    border-color: color-mix(in srgb, var(--honey) 58%, var(--line));
+    background: var(--honey-wash);
+  }
+
+  .cashflow-chart__bars {
+    display: flex;
+    width: 100%;
+    height: 154px;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cashflow-chart__bars i {
     display: block;
-    width: min(52px, 70%);
-    min-height: 14px;
-    border-radius: 10px 10px 3px 3px;
+    width: min(22px, 35%);
+    border-radius: 7px 7px 2px 2px;
   }
 
-  .vertical-chart b {
-    max-width: 95px;
+  .cashflow-chart__income {
+    background: var(--positive);
+  }
+
+  .cashflow-chart__expense {
+    background: var(--honey-deep);
+  }
+
+  .cashflow-chart button strong {
+    font-size: 0.72rem;
+    text-transform: capitalize;
+  }
+
+  .cashflow-chart button small {
+    color: var(--muted);
+    font-size: 0.6rem;
+    white-space: nowrap;
+  }
+
+  .report-category-list {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .report-category-list button {
+    display: grid;
+    grid-template-columns: minmax(105px, 0.9fr) minmax(90px, 1.35fr) auto;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    padding: 0.55rem;
+    color: var(--ink-soft);
+    text-align: left;
+  }
+
+  .report-category-list button:hover,
+  .report-category-list button.active {
+    border-color: var(--line);
+    background: var(--honey-wash);
+  }
+
+  .report-category-list__name {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.45rem;
     overflow: hidden;
-    font-size: 0.64rem;
+    font-size: 0.72rem;
+    font-weight: 750;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .vertical-chart__value {
-    font-size: 0.61rem;
+  .report-category-list__name i {
+    width: 9px;
+    height: 9px;
+    flex: none;
+    border-radius: 50%;
+  }
+
+  .report-category-list__track {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: var(--surface-muted);
+  }
+
+  .report-category-list__track i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  .report-category-list strong {
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+
+  .ranking-list__icon {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--danger-soft);
+    color: var(--danger);
   }
 
   .ranking-list {
@@ -2972,6 +3167,10 @@
     color: #b17a0b;
     font-size: 0.68rem;
     font-weight: 800;
+  }
+
+  .ranking-list li > .ranking-list__icon {
+    color: var(--danger);
   }
 
   .ranking-list p {
@@ -3515,6 +3714,13 @@
     .account-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .report-panel--trend,
+    .report-panel--categories,
+    .report-panel--ranking,
+    .report-panel--plan {
+      grid-column: span 6;
+    }
   }
 
   @media (max-width: 900px) {
@@ -3607,8 +3813,38 @@
     }
 
     .topbar {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      gap: 0.5rem;
       min-height: 62px;
       padding: 0.55rem 0.8rem;
+    }
+
+    .mobile-menu {
+      width: 44px;
+      height: 44px;
+      justify-self: start;
+      padding: 0;
+    }
+
+    .mobile-menu svg {
+      display: block;
+      margin: auto;
+    }
+
+    .mobile-brand {
+      min-width: 0;
+      justify-self: center;
+    }
+
+    .topbar-actions {
+      min-width: 0;
+      justify-self: end;
+      gap: 0;
+    }
+
+    .profile-summary {
+      display: none;
     }
 
     .month-picker {
@@ -3616,9 +3852,9 @@
     }
 
     .quick-add {
-      width: 40px;
-      height: 40px;
-      min-height: 40px;
+      width: 44px;
+      height: 44px;
+      min-height: 44px;
       justify-content: center;
       padding: 0;
     }
@@ -3738,16 +3974,47 @@
     }
 
     .report-filters {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .report-filters__fields {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .vertical-chart {
-      overflow-x: auto;
-      justify-content: flex-start;
+    .report-filters__clear {
+      align-self: flex-start;
+      margin: 0;
     }
 
-    .vertical-chart > div {
-      min-width: 68px;
+    .report-dashboard {
+      grid-template-columns: 1fr;
+    }
+
+    .report-panel--trend,
+    .report-panel--categories,
+    .report-panel--ranking,
+    .report-panel--plan {
+      grid-column: 1;
+    }
+
+    .cashflow-chart {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.2rem;
+      overflow-x: visible;
+    }
+
+    .cashflow-chart button {
+      min-width: 0;
+      padding-inline: 0.12rem;
+    }
+
+    .cashflow-chart button small {
+      font-size: 0.54rem;
+    }
+
+    .report-category-list button {
+      grid-template-columns: minmax(100px, 0.9fr) minmax(80px, 1.2fr) auto;
     }
 
     .settings-actions .button {
@@ -3788,21 +4055,32 @@
       overflow-x: hidden;
       border-top: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.96);
-      padding: 0.45rem 0.3rem max(0.45rem, env(safe-area-inset-bottom));
+      width: 100%;
+      padding: 0.4rem max(0.25rem, env(safe-area-inset-right))
+        max(0.4rem, env(safe-area-inset-bottom)) max(0.25rem, env(safe-area-inset-left));
       backdrop-filter: blur(10px);
     }
 
     .bottom-nav button {
       display: grid;
       min-width: 0;
-      min-height: 50px;
-      flex: 1;
+      min-height: 56px;
+      grid-template-rows: 22px auto;
+      align-content: center;
       place-items: center;
-      gap: 0.1rem;
-      border-radius: 10px;
+      gap: 0.18rem;
+      margin-inline: 2px;
+      border-radius: 12px;
       background: transparent;
+      padding: 0.35rem 0.08rem;
       color: var(--muted);
-      font-size: 0.58rem;
+      font-size: clamp(0.59rem, 2.4vw, 0.7rem);
+      line-height: 1.05;
+      white-space: nowrap;
+    }
+
+    .bottom-nav button svg {
+      display: block;
     }
 
     .bottom-nav button:nth-child(n + 6) {
@@ -3965,6 +4243,8 @@
 
   .auth-card {
     width: min(100%, 29rem);
+    box-sizing: border-box;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
   }
 
   .auth-card--wide {
@@ -4014,8 +4294,10 @@
 
   .auth-input input {
     min-width: 0;
+    min-height: 48px;
     flex: 1;
     border: 0;
+    padding: 0.7rem 0.75rem;
     box-shadow: none;
     cursor: text;
   }
@@ -4325,11 +4607,14 @@
     }
     .auth-form-panel {
       display: block;
-      padding: 3rem 1.1rem 3rem;
+      padding: 2.25rem max(1rem, env(safe-area-inset-right)) 3rem
+        max(1rem, env(safe-area-inset-left));
     }
     .auth-card,
     .auth-card--wide {
+      width: 100%;
       margin-inline: auto;
+      padding: clamp(1.25rem, 5.5vw, 1.75rem);
     }
     .migration-counts {
       grid-template-columns: repeat(2, 1fr);
@@ -4356,6 +4641,38 @@
     }
     .legal-shell > header .brand-words {
       display: none;
+    }
+  }
+
+  @media (max-width: 430px) {
+    .report-filters__fields {
+      grid-template-columns: 1fr;
+    }
+
+    .report-panel .panel-header {
+      flex-direction: column;
+    }
+
+    .report-category-list button {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .report-category-list__track {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .bottom-nav button {
+      font-size: clamp(0.55rem, 2.7vw, 0.64rem);
+    }
+
+    .auth-form-panel {
+      padding-top: 1.5rem;
+    }
+
+    .auth-card,
+    .auth-card--wide {
+      border-radius: 16px;
     }
   }
 }

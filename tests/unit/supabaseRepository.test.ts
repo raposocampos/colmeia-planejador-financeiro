@@ -67,12 +67,13 @@ describe("repositório Supabase", () => {
       categoryId: "alimentacao",
       month: "2026-07",
       limitCents: 50000,
+      durationMonths: 6,
       createdAt: now,
       updatedAt: now,
     });
     expect(writes[0]).toMatchObject({
       table: "budgets",
-      record: { month: "2026-07", limit_cents: 50000 },
+      record: { month: "2026-07", limit_cents: 50000, duration_months: 6 },
     });
     await repository.cache.clear();
   });
