@@ -233,9 +233,11 @@ export default function PlannerApp({
   } | null>(null);
   const [notice, setNotice] = useState("");
   const [month, setMonth] = useState(currentMonth());
+  const [dashboardActiveMonth, setDashboardActiveMonth] = useState(currentMonth());
   const [search, setSearch] = useState("");
   const [transactionFilter, setTransactionFilter] = useState("all");
   const [reportMonth, setReportMonth] = useState(currentMonth());
+  const [reportActiveMonth, setReportActiveMonth] = useState(currentMonth());
   const [reportCategory, setReportCategory] = useState("");
   const [reportAccount, setReportAccount] = useState("");
   const [reportCard, setReportCard] = useState("");
@@ -811,7 +813,10 @@ export default function PlannerApp({
             <input
               type="month"
               value={month}
-              onChange={(event) => setMonth(event.target.value)}
+              onChange={(event) => {
+                setMonth(event.target.value);
+                setDashboardActiveMonth(event.target.value);
+              }}
             />
           </label>
         </section>
@@ -867,7 +872,10 @@ export default function PlannerApp({
                     type="button"
                     className={dashboardRange === length ? "active" : ""}
                     aria-pressed={dashboardRange === length}
-                    onClick={() => setDashboardRange(length)}
+                    onClick={() => {
+                      setDashboardRange(length);
+                      setDashboardActiveMonth(month);
+                    }}
                   >
                     {length} meses
                   </button>
@@ -887,8 +895,9 @@ export default function PlannerApp({
             </div>
             <CashFlowChart
               points={trend}
-              selectedMonth={month}
-              onSelectMonth={setMonth}
+              anchorMonth={month}
+              activeMonth={dashboardActiveMonth}
+              onActiveMonthChange={setDashboardActiveMonth}
               monthLabel={monthLabel}
               shortMonthLabel={shortMonthLabel}
             />
@@ -1658,7 +1667,10 @@ export default function PlannerApp({
               <input
                 type="month"
                 value={reportMonth}
-                onChange={(event) => setReportMonth(event.target.value)}
+                onChange={(event) => {
+                  setReportMonth(event.target.value);
+                  setReportActiveMonth(event.target.value);
+                }}
               />
             </label>
             <label>
@@ -1761,7 +1773,7 @@ export default function PlannerApp({
               <div>
                 <h2>Fluxo dos últimos 6 meses</h2>
                 <p className="panel-description">
-                  Selecione um mês para atualizar todo o relatório.
+                  Selecione um mês para consultar os detalhes do fluxo.
                 </p>
               </div>
               <div className="chart-legend" aria-label="Legenda">
@@ -1788,8 +1800,9 @@ export default function PlannerApp({
             </div>
             <CashFlowChart
               points={trend}
-              selectedMonth={reportMonth}
-              onSelectMonth={setReportMonth}
+              anchorMonth={reportMonth}
+              activeMonth={reportActiveMonth}
+              onActiveMonthChange={setReportActiveMonth}
               monthLabel={monthLabel}
               shortMonthLabel={shortMonthLabel}
             />

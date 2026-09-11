@@ -18,8 +18,10 @@ interface InfoTooltipProps {
 
 export function InfoTooltip({ label, children }: InfoTooltipProps) {
   const [open, setOpen] = useState(false);
+  const [offsetX, setOffsetX] = useState(0);
   const id = useId();
   const rootRef = useRef<HTMLSpanElement>(null);
+  const bubbleRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -37,8 +39,44 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const keepInsideViewport = () => {
+      const bubble = bubbleRef.current;
+      if (!bubble) return;
+      const rect = bubble.getBoundingClientRect();
+      const safeInset = 16;
+      const unshiftedLeft = rect.left - offsetX;
+      const unshiftedRight = rect.right - offsetX;
+      if (unshiftedLeft < safeInset) {
+        setOffsetX(safeInset - unshiftedLeft);
+        return;
+      }
+      if (unshiftedRight > window.innerWidth - safeInset) {
+        setOffsetX(window.innerWidth - safeInset - unshiftedRight);
+        return;
+      }
+      setOffsetX(0);
+    };
+    const frame = window.requestAnimationFrame(keepInsideViewport);
+    window.addEventListener("resize", keepInsideViewport);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", keepInsideViewport);
+    };
+  }, [offsetX, open]);
+
   return (
-    <span ref={rootRef} className="info-tooltip" data-open={open}>
+    <span
+      ref={rootRef}
+      className="info-tooltip"
+      data-open={open}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onBlur={(event) => {
+        if (!rootRef.current?.contains(event.relatedTarget as Node)) setOpen(false);
+      }}
+    >
       <button
         type="button"
         aria-label={label}
@@ -49,7 +87,14 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
       >
         <Info size={15} />
       </button>
-      <span className="info-tooltip__bubble" id={id} role="tooltip" aria-hidden={!open}>
+      <span
+        ref={bubbleRef}
+        className="info-tooltip__bubble"
+        id={id}
+        role="tooltip"
+        aria-hidden={!open}
+        style={{ "--tooltip-shift": `${offsetX}px` } as React.CSSProperties}
+      >
         {children}
       </span>
     </span>
@@ -79,7 +124,7 @@ export function MetricCard({
         <span className="manager-metric__icon" aria-hidden="true">
           <Icon size={19} />
         </span>
-        <span>{label}</span>
+        <span className="manager-metric__label">{label}</span>
         <InfoTooltip label={`Entenda o indicador ${label}`}>{tooltip}</InfoTooltip>
       </header>
       <strong>{value}</strong>
@@ -90,16 +135,18 @@ export function MetricCard({
 
 interface CashFlowChartProps {
   points: MonthlyTrendPoint[];
-  selectedMonth: string;
-  onSelectMonth: (month: string) => void;
+  anchorMonth: string;
+  activeMonth: string;
+  onActiveMonthChange: (month: string) => void;
   monthLabel: (month: string) => string;
   shortMonthLabel: (month: string) => string;
 }
 
 export function CashFlowChart({
   points,
-  selectedMonth,
-  onSelectMonth,
+  anchorMonth,
+  activeMonth,
+  onActiveMonthChange,
   monthLabel,
   shortMonthLabel,
 }: CashFlowChartProps) {
@@ -119,21 +166,32 @@ export function CashFlowChart({
   const linePath = linePoints
     .map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`)
     .join(" ");
+  const firstMonth = points[0]?.month;
+  const lastMonth = points.at(-1)?.month;
 
   useEffect(() => {
     const scroller = scrollerRef.current;
-    const selected = scroller?.querySelector<HTMLElement>(
-      `[data-month="${selectedMonth}"]`,
+    const anchor = scroller?.querySelector<HTMLElement>(
+      `[data-month="${anchorMonth}"]`,
     );
-    if (!scroller || !selected) return;
+    if (!scroller || !anchor) return;
     scroller.scrollTo({
       left: Math.max(
         0,
-        selected.offsetLeft - (scroller.clientWidth - selected.clientWidth) / 2,
+        anchor.offsetLeft - (scroller.clientWidth - anchor.clientWidth) / 2,
       ),
       behavior: "smooth",
     });
-  }, [points, selectedMonth]);
+  }, [anchorMonth, firstMonth, lastMonth, points.length]);
+
+  const focusMonth = (index: number) => {
+    const point = points[index];
+    if (!point) return;
+    onActiveMonthChange(point.month);
+    scrollerRef.current
+      ?.querySelector<HTMLButtonElement>(`button[data-month="${point.month}"]`)
+      ?.focus();
+  };
 
   return (
     <div
@@ -150,12 +208,23 @@ export function CashFlowChart({
           aria-hidden="true"
         >
           <path d={linePath} />
-          {linePoints.map((point, index) => (
-            <circle key={points[index].month} cx={point.x} cy={point.y} r="4" />
-          ))}
         </svg>
-        {points.map((point) => {
-          const active = point.month === selectedMonth;
+        <span className="manager-cashflow__points" aria-hidden="true">
+          {linePoints.map((point, index) => (
+            <i
+              key={points[index].month}
+              className={points[index].month === activeMonth ? "active" : ""}
+              style={
+                {
+                  "--point-x": `${(point.x / 600) * 100}%`,
+                  "--point-y": `${(point.y / 160) * 100}%`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </span>
+        {points.map((point, index) => {
+          const active = point.month === activeMonth;
           return (
             <button
               key={point.month}
@@ -164,7 +233,26 @@ export function CashFlowChart({
               className={active ? "active" : ""}
               aria-pressed={active}
               aria-label={`${monthLabel(point.month)}: receitas ${formatBRL(point.income)}, despesas ${formatBRL(point.expense)}, saldo ${formatBRL(point.result)}`}
-              onClick={() => onSelectMonth(point.month)}
+              onFocus={() => onActiveMonthChange(point.month)}
+              onClick={() => onActiveMonthChange(point.month)}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowLeft") {
+                  event.preventDefault();
+                  focusMonth(Math.max(0, index - 1));
+                }
+                if (event.key === "ArrowRight") {
+                  event.preventDefault();
+                  focusMonth(Math.min(points.length - 1, index + 1));
+                }
+                if (event.key === "Home") {
+                  event.preventDefault();
+                  focusMonth(0);
+                }
+                if (event.key === "End") {
+                  event.preventDefault();
+                  focusMonth(points.length - 1);
+                }
+              }}
             >
               <span className="manager-cashflow__bars" aria-hidden="true">
                 <i
