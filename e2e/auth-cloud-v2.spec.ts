@@ -229,12 +229,23 @@ test("relatórios formam um dashboard interativo sem estourar o viewport", async
 
   const months = page.locator(".manager-cashflow__plot > button");
   await expect(months).toHaveCount(6);
+  const periodInput = page.locator('.report-filters input[type="month"]');
+  const initialPeriod = await periodInput.inputValue();
+  const initialMonths = await months.evaluateAll((items) =>
+    items.map((item) => item.getAttribute("data-month")),
+  );
   const selectedMonth = await months.nth(4).getAttribute("data-month");
   if (!selectedMonth) throw new Error("mês interativo ausente");
   await months.nth(4).click();
   await expect(
     page.locator(`.manager-cashflow__plot > button[data-month="${selectedMonth}"]`),
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(periodInput).toHaveValue(initialPeriod);
+  expect(
+    await months.evaluateAll((items) =>
+      items.map((item) => item.getAttribute("data-month")),
+    ),
+  ).toEqual(initialMonths);
 
   const layout = await page.evaluate(() => {
     const dashboard = document.querySelector<HTMLElement>(".report-dashboard");
@@ -331,6 +342,108 @@ test("painel gerencial se adapta ao celular sem cortar cartões ou a página", a
     expect(layout.bodyOverflow).toBe(false);
     expect(layout.clippedCards).toBe(false);
     expect(layout.chartScrollable).toBe(true);
+  }
+});
+
+test("acabamento do painel mantém pontos circulares e ações sem colisões", async ({
+  page,
+}, testInfo) => {
+  const widths =
+    testInfo.project.name === "mobile" ? [320, 360, 390, 430] : [1280, 1440];
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/?review=migrated");
+    const periodInput = page.locator('.manager-month-picker input[type="month"]');
+    const anchorMonth = await periodInput.inputValue();
+
+    await page.getByRole("button", { name: "12 meses" }).click();
+    const months = page.locator(".manager-cashflow__plot > button");
+    await expect(months).toHaveCount(12);
+    const lastMonth = await months.last().getAttribute("data-month");
+    await months.nth(10).click();
+    await expect(months.nth(10)).toHaveAttribute("aria-pressed", "true");
+    await months.nth(10).press("ArrowLeft");
+    await expect(months.nth(9)).toHaveAttribute("aria-pressed", "true");
+    await months.nth(9).press("ArrowRight");
+    await expect(months.nth(10)).toHaveAttribute("aria-pressed", "true");
+    await expect(periodInput).toHaveValue(anchorMonth);
+    await expect(months).toHaveCount(12);
+    await expect(months.last()).toHaveAttribute("data-month", lastMonth ?? "");
+
+    await page.getByRole("button", { name: "6 meses" }).click();
+    await expect(months).toHaveCount(6);
+    await expect(months.last()).toHaveAttribute("data-month", anchorMonth);
+    await expect(months.last()).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "12 meses" }).click();
+    await expect(months).toHaveCount(12);
+    await expect(months.last()).toHaveAttribute("aria-pressed", "true");
+
+    const layout = await page.evaluate(() => {
+      const overlaps = (left: DOMRect, right: DOMRect) =>
+        left.left < right.right &&
+        left.right > right.left &&
+        left.top < right.bottom &&
+        left.bottom > right.top;
+      const pointSizes = [
+        ...document.querySelectorAll<HTMLElement>(".manager-cashflow__points i"),
+      ].map((point) => {
+        const rect = point.getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      });
+      const metric = [
+        ...document.querySelectorAll<HTMLElement>(".manager-metric"),
+      ].find((card) => card.textContent?.includes("Comprometimento"));
+      const metricLabel = metric?.querySelector<HTMLElement>(".manager-metric__label");
+      const metricTooltip = metric?.querySelector<HTMLElement>(
+        ".info-tooltip > button",
+      );
+      const headerCollisions = [
+        ...document.querySelectorAll<HTMLElement>(".manager-panel__header"),
+      ].flatMap((header) => {
+        const copy = header.querySelector<HTMLElement>(":scope > div:first-child");
+        const action = header.querySelector<HTMLElement>(
+          ":scope > .text-button, :scope > .info-tooltip, :scope > .manager-range",
+        );
+        if (!copy || !action) return [];
+        return overlaps(copy.getBoundingClientRect(), action.getBoundingClientRect())
+          ? [header.textContent?.trim() ?? "cabeçalho"]
+          : [];
+      });
+      return {
+        pointSizes,
+        metricCollision:
+          metricLabel && metricTooltip
+            ? overlaps(
+                metricLabel.getBoundingClientRect(),
+                metricTooltip.getBoundingClientRect(),
+              )
+            : true,
+        headerCollisions,
+        documentOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+      };
+    });
+
+    expect(layout.pointSizes).toHaveLength(12);
+    for (const point of layout.pointSizes) {
+      expect(Math.abs(point.width - point.height)).toBeLessThanOrEqual(0.5);
+      expect(point.width).toBeGreaterThanOrEqual(11.5);
+      expect(point.width).toBeLessThanOrEqual(12.5);
+    }
+    expect(layout.metricCollision).toBe(false);
+    expect(layout.headerCollisions).toEqual([]);
+    expect(layout.documentOverflow).toBe(false);
+
+    const firstMetricTooltip = page.locator(".manager-metric .info-tooltip").first();
+    await firstMetricTooltip.getByRole("button").click();
+    const bubble = firstMetricTooltip.getByRole("tooltip");
+    await expect(bubble).toBeVisible();
+    const bubbleBox = await bubble.boundingBox();
+    if (!bubbleBox) throw new Error("tooltip do indicador ausente");
+    expect(bubbleBox.x).toBeGreaterThanOrEqual(15);
+    expect(bubbleBox.x + bubbleBox.width).toBeLessThanOrEqual(width - 15);
+    await page.keyboard.press("Escape");
+    await expect(bubble).toBeHidden();
   }
 });
 

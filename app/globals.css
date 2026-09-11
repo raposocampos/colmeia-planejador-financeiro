@@ -4757,13 +4757,18 @@
   .manager-metric header {
     display: grid;
     min-width: 0;
-    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-columns: 30px minmax(0, 1fr) 44px;
     align-items: center;
     gap: 0.45rem;
-    padding-right: 28px;
     color: var(--ink-soft);
     font-size: 0.76rem;
     font-weight: 720;
+  }
+
+  .manager-metric__label {
+    min-width: 0;
+    overflow-wrap: break-word;
+    line-height: 1.25;
   }
 
   .manager-metric__icon {
@@ -4776,9 +4781,7 @@
   }
 
   .manager-metric header .info-tooltip {
-    position: absolute;
-    top: 0.7rem;
-    right: 0.7rem;
+    justify-self: end;
   }
 
   .manager-metric--income .manager-metric__icon {
@@ -4832,8 +4835,8 @@
 
   .info-tooltip > button {
     display: grid;
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
     place-items: center;
     border-radius: 50%;
     background: transparent;
@@ -4860,11 +4863,10 @@
     font-size: 0.7rem;
     font-weight: 520;
     line-height: 1.4;
+    transform: translateX(var(--tooltip-shift, 0px));
     box-shadow: 0 14px 34px rgba(37, 25, 27, 0.2);
   }
 
-  .info-tooltip:hover .info-tooltip__bubble,
-  .info-tooltip:focus-within .info-tooltip__bubble,
   .info-tooltip[data-open="true"] .info-tooltip__bubble {
     display: block;
   }
@@ -4901,10 +4903,22 @@
   .manager-panel__header {
     display: flex;
     min-width: 0;
+    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: 1rem;
+  }
+
+  .manager-panel__header > div:first-child {
+    min-width: 0;
+    flex: 1 1 16rem;
+  }
+
+  .manager-panel__header > .text-button,
+  .manager-panel__header > .info-tooltip {
+    flex: none;
+    margin-inline-start: auto;
   }
 
   .manager-panel__header h2 {
@@ -5000,16 +5014,36 @@
     vector-effect: non-scaling-stroke;
   }
 
-  .manager-cashflow__line circle {
-    fill: var(--surface);
-    stroke: var(--ink);
-    stroke-width: 2;
-    vector-effect: non-scaling-stroke;
+  .manager-cashflow__points {
+    position: absolute;
+    z-index: 3;
+    top: 0.3rem;
+    left: 0;
+    width: 100%;
+    height: 170px;
+    pointer-events: none;
+  }
+
+  .manager-cashflow__points i {
+    position: absolute;
+    top: var(--point-y);
+    left: var(--point-x);
+    display: block;
+    width: 12px;
+    height: 12px;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface) 72%, transparent);
+  }
+
+  .manager-cashflow__points i.active {
+    background: var(--honey);
   }
 
   .manager-cashflow__plot > button {
     position: relative;
-    z-index: 1;
     display: grid;
     min-width: 0;
     min-height: 224px;
@@ -5480,20 +5514,19 @@
     }
 
     .manager-metric {
-      min-height: 132px;
+      min-height: 148px;
       padding: 0.8rem;
     }
 
     .manager-metric header {
-      grid-template-columns: 28px minmax(0, 1fr);
+      grid-template-columns: 28px minmax(0, 1fr) 44px;
       gap: 0.35rem;
-      padding-right: 24px;
       font-size: 0.7rem;
     }
 
-    .manager-metric header .info-tooltip {
-      top: 0.55rem;
-      right: 0.5rem;
+    .manager-metric__label {
+      grid-row: 2;
+      grid-column: 1 / -1;
     }
 
     .manager-metric__icon {
@@ -5522,14 +5555,18 @@
 
     .manager-panel__header {
       align-items: flex-start;
-      flex-direction: column;
       gap: 0.65rem;
+    }
+
+    .manager-panel__header > div:first-child {
+      flex-basis: 100%;
     }
 
     .manager-panel__header .text-button,
     .manager-panel__header .info-tooltip {
       align-self: flex-end;
-      margin-top: -2.6rem;
+      margin-top: 0;
+      margin-inline-start: auto;
     }
 
     .manager-range {
