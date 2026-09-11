@@ -262,6 +262,7 @@ test("cabeçalho e navegação inferior ficam centralizados no celular", async (
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "validação específica do celular");
+  await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/?review=migrated");
 
   const menu = page.locator(".mobile-menu");
@@ -284,10 +285,19 @@ test("cabeçalho e navegação inferior ficam centralizados no celular", async (
   ).toBeLessThanOrEqual(1);
   for (const button of await buttons.all()) {
     const box = await button.boundingBox();
-    if (!box) throw new Error("botão móvel ausente");
+    const label = button.locator("span");
+    const labelBox = await label.boundingBox();
+    const labelWidth = await label.evaluate((element) => ({
+      client: element.clientWidth,
+      scroll: element.scrollWidth,
+    }));
+    if (!box || !labelBox) throw new Error("botão móvel ausente");
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(viewportWidth + 1);
     expect(box.width).toBeGreaterThanOrEqual(60);
+    expect(labelBox.x).toBeGreaterThanOrEqual(box.x - 1);
+    expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(box.x + box.width + 1);
+    expect(labelWidth.scroll).toBeLessThanOrEqual(labelWidth.client + 1);
   }
 
   await expect(page.getByText("Próximo desconto · mensal")).toBeVisible();

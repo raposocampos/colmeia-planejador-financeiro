@@ -97,17 +97,46 @@ import {
 interface NavItem {
   id: NavKey;
   label: string;
+  mobileLabel: string;
+  mobileBreakAt?: number;
   icon: LucideIcon;
 }
 
 const navItems: NavItem[] = [
-  { id: "dashboard", label: "Visão geral", icon: LayoutDashboard },
-  { id: "transactions", label: "Transações", icon: ReceiptText },
-  { id: "accounts", label: "Contas e cartões", icon: WalletCards },
-  { id: "budgets", label: "Orçamentos", icon: Gauge },
-  { id: "goals", label: "Metas", icon: GoalIcon },
-  { id: "reports", label: "Relatórios", icon: BarChart3 },
-  { id: "settings", label: "Configurações", icon: Settings },
+  {
+    id: "dashboard",
+    label: "Visão geral",
+    mobileLabel: "Visão",
+    icon: LayoutDashboard,
+  },
+  {
+    id: "transactions",
+    label: "Transações",
+    mobileLabel: "Transações",
+    mobileBreakAt: 6,
+    icon: ReceiptText,
+  },
+  {
+    id: "accounts",
+    label: "Contas e cartões",
+    mobileLabel: "Contas",
+    icon: WalletCards,
+  },
+  {
+    id: "budgets",
+    label: "Orçamentos",
+    mobileLabel: "Orçamentos",
+    mobileBreakAt: 4,
+    icon: Gauge,
+  },
+  { id: "goals", label: "Metas", mobileLabel: "Metas", icon: GoalIcon },
+  { id: "reports", label: "Relatórios", mobileLabel: "Relatórios", icon: BarChart3 },
+  {
+    id: "settings",
+    label: "Configurações",
+    mobileLabel: "Configurações",
+    icon: Settings,
+  },
 ];
 
 const accountLabels: Record<Account["type"], string> = {
@@ -2294,7 +2323,17 @@ export default function PlannerApp({
                 aria-label={item.label}
               >
                 <Icon size={19} />
-                <span>{item.label.split(" ")[0]}</span>
+                <span aria-hidden="true">
+                  {item.mobileBreakAt ? (
+                    <>
+                      {item.mobileLabel.slice(0, item.mobileBreakAt)}
+                      <wbr />
+                      {item.mobileLabel.slice(item.mobileBreakAt)}
+                    </>
+                  ) : (
+                    item.mobileLabel
+                  )}
+                </span>
               </button>
             );
           })}
