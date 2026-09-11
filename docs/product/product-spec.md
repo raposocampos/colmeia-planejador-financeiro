@@ -18,13 +18,15 @@ navegador e não exige cadastro.
 - Contas, cartões, categorias e saldo inicial.
 - Receitas, despesas e transferências com busca, filtro, edição, duplicação,
   exclusão, situação e recorrência declarada.
-- Dashboard mensal com saldo, comprometimento, categorias, orçamentos, metas,
-  últimas transações e próximos descontos calculados pela recorrência.
+- Dashboard gerencial mensal com receitas, despesas, saldo, comprometimento,
+  fluxo de caixa de 6 ou 12 meses, categorias, principais gastos, orçamentos,
+  metas, insights contextuais, projeção informativa e próximos descontos.
 - Limites por categoria com duração de 1, 3, 6 ou 12 meses, ou sem prazo, e
   mensagens normal/atenção/excedido em cada mês ativo.
 - Metas com progresso, valor restante e estimativa mensal opcional.
 - Dashboard de relatórios interativo com comparativo de seis meses, distribuição
-  por categoria e filtros combináveis por mês, conta, cartão e categoria.
+  por categoria, tooltips acessíveis e filtros combináveis por mês, conta, cartão
+  e categoria.
 - Exportação CSV e JSON; importação JSON substitutiva confirmada; CSV aditivo
   com pré-visualização.
 - IndexedDB, funcionamento offline após o primeiro carregamento e instalação

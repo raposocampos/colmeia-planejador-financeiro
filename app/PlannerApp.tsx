@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -17,20 +16,23 @@ import {
   ArrowUpRight,
   BarChart3,
   BellRing,
-  CalendarClock,
+  ChartNoAxesCombined,
   ChevronRight,
   CircleDollarSign,
   Copy,
   CreditCard,
   Download,
   Edit3,
+  Ellipsis,
   FileJson,
   Gauge,
   Goal as GoalIcon,
   GripVertical,
   Landmark,
   LayoutDashboard,
+  Lightbulb,
   Menu,
+  PieChart,
   PiggyBank,
   Plus,
   ReceiptText,
@@ -50,12 +52,19 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark } from "./components/BrandMark";
+import {
+  CashFlowChart,
+  ExpenseDonut,
+  InfoTooltip,
+  MetricCard,
+} from "./components/DashboardCharts";
 import { EntryModal, type FormValues, type ModalState } from "./components/EntryModal";
 import { ProgressBar } from "./components/ProgressBar";
 import { createBackup, parseBackup } from "./lib/backup";
 import { moveCategoryId, sortCategories } from "./lib/categories";
 import {
   accountBalance,
+  buildDashboardInsights,
   budgetProgress,
   categoryTotals,
   comparisonPercent,
@@ -64,12 +73,13 @@ import {
   formatDate,
   goalProgress,
   isBudgetActiveInMonth,
+  monthlyTrend,
   nextOccurrenceDate,
   parseMoney,
   previousMonth,
+  projectMonth,
   shiftMonth,
   summarizeMonth,
-  totalBalance,
   transactionsInMonth,
 } from "./lib/calculations";
 import {
@@ -97,8 +107,6 @@ import {
 interface NavItem {
   id: NavKey;
   label: string;
-  mobileLabel: string;
-  mobileBreakAt?: number;
   icon: LucideIcon;
 }
 
@@ -106,35 +114,28 @@ const navItems: NavItem[] = [
   {
     id: "dashboard",
     label: "Visão geral",
-    mobileLabel: "Visão",
     icon: LayoutDashboard,
   },
   {
     id: "transactions",
     label: "Transações",
-    mobileLabel: "Transações",
-    mobileBreakAt: 6,
     icon: ReceiptText,
   },
   {
     id: "accounts",
     label: "Contas e cartões",
-    mobileLabel: "Contas",
     icon: WalletCards,
   },
   {
     id: "budgets",
     label: "Orçamentos",
-    mobileLabel: "Orçamentos",
-    mobileBreakAt: 4,
     icon: Gauge,
   },
-  { id: "goals", label: "Metas", mobileLabel: "Metas", icon: GoalIcon },
-  { id: "reports", label: "Relatórios", mobileLabel: "Relatórios", icon: BarChart3 },
+  { id: "goals", label: "Metas", icon: GoalIcon },
+  { id: "reports", label: "Relatórios", icon: BarChart3 },
   {
     id: "settings",
     label: "Configurações",
-    mobileLabel: "Configurações",
     icon: Settings,
   },
 ];
@@ -218,12 +219,12 @@ export default function PlannerApp({
   onDeleteAccount,
   initialNav = "dashboard",
 }: PlannerAppProps) {
-  const assetBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   const [state, setState] = useState<PlannerState>(emptyState);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [activeNav, setActiveNav] = useState<NavKey>(initialNav);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [deleteIntent, setDeleteIntent] = useState<{
     table: "accounts" | "cards" | "categories" | "transactions" | "budgets" | "goals";
@@ -238,6 +239,8 @@ export default function PlannerApp({
   const [reportCategory, setReportCategory] = useState("");
   const [reportAccount, setReportAccount] = useState("");
   const [reportCard, setReportCard] = useState("");
+  const [dashboardRange, setDashboardRange] = useState<6 | 12>(6);
+  const [dashboardCategory, setDashboardCategory] = useState("");
   const [pendingImport, setPendingImport] = useState<BackupData | null>(null);
   const [pendingCsv, setPendingCsv] = useState<Transaction[]>([]);
   const [categoryOrderPreview, setCategoryOrderPreview] = useState<string[] | null>(
@@ -278,6 +281,23 @@ export default function PlannerApp({
     const timeout = window.setTimeout(() => setNotice(""), 3500);
     return () => window.clearTimeout(timeout);
   }, [notice]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const focusFrame = window.requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>(".mobile-more button")?.focus(),
+    );
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMoreOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", closeOnEscape);
+      previousFocus?.focus();
+    };
+  }, [moreOpen]);
 
   const requireOnline = (): boolean => {
     if (online) return true;
@@ -412,10 +432,6 @@ export default function PlannerApp({
   const previousSummary = useMemo(
     () => summarizeMonth(state.transactions, previousMonth(month)),
     [state.transactions, month],
-  );
-  const balance = useMemo(
-    () => totalBalance(state.accounts, state.transactions),
-    [state.accounts, state.transactions],
   );
   const expensesByCategory = useMemo(
     () => categoryTotals(state.transactions, state.categories, month),
@@ -718,6 +734,7 @@ export default function PlannerApp({
   const goTo = (nav: NavKey) => {
     setActiveNav(nav);
     setSidebarOpen(false);
+    setMoreOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -743,176 +760,156 @@ export default function PlannerApp({
     );
 
   const renderDashboard = () => {
-    const maxCategory = Math.max(...expensesByCategory.map((item) => item.value), 1);
-    const budgets = state.budgets.filter((item) => isBudgetActiveInMonth(item, month));
+    const firstName = profile.name.trim().split(/\s+/)[0] || "você";
+    const trend = monthlyTrend(state.transactions, month, dashboardRange);
+    const insights = buildDashboardInsights(
+      state.transactions,
+      state.categories,
+      state.budgets,
+      state.goals,
+      month,
+    );
+    const projection = projectMonth(state.transactions, month);
+    const budgets = state.budgets
+      .filter((item) => isBudgetActiveInMonth(item, month))
+      .map((budget) => ({
+        budget,
+        progress: budgetProgress(budget, state.transactions, month),
+      }))
+      .sort((left, right) => right.progress.percent - left.progress.percent);
+    const rankedExpenses = sortTransactions(
+      selectedMonthTransactions.filter(
+        (item) =>
+          item.type === "expense" &&
+          item.status === "paid" &&
+          (!dashboardCategory || item.categoryId === dashboardCategory),
+      ),
+    )
+      .sort((left, right) => right.amountCents - left.amountCents)
+      .slice(0, 5);
+    const comparisonCopy = (current: number, previous: number): string => {
+      if (previous === 0)
+        return current === 0
+          ? "Sem movimentação nos dois meses"
+          : "Sem base no mês anterior";
+      const value = comparisonPercent(current, previous);
+      return `${value > 0 ? "+" : ""}${value}% vs. mês anterior`;
+    };
+    const commitmentDifference = summary.committed - previousSummary.committed;
+    const selectedCategoryName = state.categories.find(
+      (category) => category.id === dashboardCategory,
+    )?.name;
     return (
       <>
-        <section className="hero-summary" key={"hero-" + month}>
-          <div className="hero-copy">
-            <p className="eyebrow">SUA COLMEIA FINANCEIRA</p>
-            <h1>Seu dinheiro, com mais clareza.</h1>
-            <p>
-              {summary.result < 0
-                ? `${monthLabel(month)} mostra um mês desafiador, com despesas acima das receitas. Você ainda tem espaço para retomar o controle e fazer escolhas mais conscientes.`
-                : `${monthLabel(month)} mostra um caminho positivo. Continue acompanhando suas escolhas para manter o mês sob controle.`}
-            </p>
-            <div className="hero-actions">
-              <button
-                className="button"
-                type="button"
-                onClick={() => setModal({ kind: "transaction" })}
-              >
-                <Plus size={18} /> Nova transação
-              </button>
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => goTo("reports")}
-              >
-                Ver relatórios <ChevronRight size={17} />
-              </button>
-            </div>
+        <section className="manager-heading">
+          <div>
+            <h1>Bom dia, {firstName}!</h1>
+            <p>Disciplina hoje, liberdade amanhã.</p>
           </div>
-          <div className="balance-panel">
-            <Image
-              className="balance-mark"
-              src={assetBasePath + "/brand/colmeia-symbol.png"}
-              alt=""
-              width={72}
-              height={72}
-              aria-hidden="true"
-              unoptimized
+          <label className="manager-month-picker">
+            <span>Mês da visão</span>
+            <input
+              type="month"
+              value={month}
+              onChange={(event) => setMonth(event.target.value)}
             />
-            <div className="balance-reading">
-              <span>Saldo total</span>
-              <strong>{formatBRL(balance)}</strong>
-              <small>
-                Somando {state.accounts.filter((item) => !item.archived).length}{" "}
-                conta(s) ativa(s)
-              </small>
-            </div>
-            <em className="balance-note">
-              Disciplina hoje,
-              <br /> mais escolhas amanhã.
-            </em>
-          </div>
+          </label>
         </section>
 
-        <section
-          className="metric-grid"
-          aria-label="Resumo do mês"
-          key={"metrics-" + month}
-        >
-          <article className="metric-card">
-            <span className="metric-icon metric-icon--income">
-              <TrendingUp size={20} />
-            </span>
-            <p>Receitas</p>
-            <strong>{formatBRL(summary.income)}</strong>
-            <small>
-              {comparisonPercent(summary.income, previousSummary.income) >= 0
-                ? "+"
-                : ""}
-              {comparisonPercent(summary.income, previousSummary.income)}% vs. mês
-              anterior
-            </small>
-          </article>
-          <article className="metric-card">
-            <span className="metric-icon metric-icon--expense">
-              <TrendingDown size={20} />
-            </span>
-            <p>Despesas</p>
-            <strong>{formatBRL(summary.expense)}</strong>
-            <small>{summary.committed}% da renda do mês comprometida</small>
-          </article>
-          <article className="metric-card metric-card--featured">
-            <span className="metric-icon">
-              <CircleDollarSign size={20} />
-            </span>
-            <p>Resultado do mês</p>
-            <strong>{formatBRL(summary.result)}</strong>
-            <small>
-              {summary.result >= 0
-                ? "Você fechou o período no positivo."
-                : "Vale revisar as maiores categorias."}
-            </small>
-          </article>
-          <article className="metric-card">
-            <span className="metric-icon">
-              <CalendarClock size={20} />
-            </span>
-            <p>Movimentações</p>
-            <strong>{selectedMonthTransactions.length}</strong>
-            <small>
-              {
-                selectedMonthTransactions.filter((item) => item.status === "pending")
-                  .length
-              }{" "}
-              pendente(s)
-            </small>
-          </article>
+        <section className="manager-metrics" aria-label="Resumo do mês">
+          <MetricCard
+            icon={TrendingUp}
+            label="Receitas"
+            value={formatBRL(summary.income)}
+            detail={comparisonCopy(summary.income, previousSummary.income)}
+            tooltip="Soma das receitas pagas no mês selecionado. Transferências não entram neste indicador."
+            tone="income"
+          />
+          <MetricCard
+            icon={TrendingDown}
+            label="Despesas"
+            value={formatBRL(summary.expense)}
+            detail={comparisonCopy(summary.expense, previousSummary.expense)}
+            tooltip="Soma das despesas pagas no mês selecionado. Compromissos pendentes aparecem separadamente."
+            tone="expense"
+          />
+          <MetricCard
+            icon={CircleDollarSign}
+            label="Saldo do mês"
+            value={formatBRL(summary.result)}
+            detail={comparisonCopy(summary.result, previousSummary.result)}
+            tooltip="Receitas pagas menos despesas pagas no mês. Este valor não é o saldo total das suas contas."
+            tone="balance"
+          />
+          <MetricCard
+            icon={Gauge}
+            label="Comprometimento"
+            value={`${summary.committed}%`}
+            detail={`${commitmentDifference > 0 ? "+" : ""}${commitmentDifference} p.p. vs. mês anterior`}
+            tooltip="Percentual das receitas pagas consumido pelas despesas pagas. Pode ultrapassar 100% quando as despesas são maiores que a renda do mês."
+            tone="commitment"
+          />
         </section>
 
-        <section className="dashboard-grid">
-          <article className="panel panel--wide panel--category">
-            <header className="panel-header">
+        <section className="manager-dashboard">
+          <article className="panel manager-panel manager-panel--cashflow">
+            <header className="manager-panel__header">
               <div>
-                <p className="eyebrow">LEITURA DO MÊS</p>
-                <h2>Para onde o dinheiro está indo</h2>
-                <p className="panel-description">
-                  Suas principais categorias de despesas em {monthLabel(month)}.
-                </p>
+                <h2>
+                  <ChartNoAxesCombined size={22} /> Fluxo de caixa
+                </h2>
+                <p>Receitas, despesas e saldo ao longo do tempo.</p>
               </div>
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => goTo("reports")}
-              >
-                Ver relatório <ChevronRight size={16} />
-              </button>
-            </header>
-            {expensesByCategory.length ? (
-              <div className="category-chart">
-                {expensesByCategory.slice(0, 7).map((item) => (
-                  <div className="category-row" key={item.id}>
-                    <span>{item.name}</span>
-                    <div className="category-track">
-                      <i
-                        style={{
-                          width: Math.max(8, (item.value / maxCategory) * 100) + "%",
-                          background: item.color,
-                        }}
-                      />
-                    </div>
-                    <strong>{formatBRL(item.value)}</strong>
-                  </div>
+              <div className="manager-range" aria-label="Período do fluxo de caixa">
+                {([6, 12] as const).map((length) => (
+                  <button
+                    key={length}
+                    type="button"
+                    className={dashboardRange === length ? "active" : ""}
+                    aria-pressed={dashboardRange === length}
+                    onClick={() => setDashboardRange(length)}
+                  >
+                    {length} meses
+                  </button>
                 ))}
               </div>
-            ) : (
-              <EmptyState
-                icon={BarChart3}
-                title="Ainda não há despesas neste mês"
-                text="Adicione sua primeira despesa para entender para onde o dinheiro está indo."
-                action="Adicionar despesa"
-                onAction={() =>
-                  setModal({ kind: "transaction", transactionType: "expense" })
-                }
-              />
-            )}
+            </header>
+            <div className="chart-legend manager-chart-legend" aria-label="Legenda">
+              <span>
+                <i className="chart-legend__income" /> Receitas
+              </span>
+              <span>
+                <i className="chart-legend__expense" /> Despesas
+              </span>
+              <span>
+                <i className="chart-legend__balance" /> Saldo
+              </span>
+            </div>
+            <CashFlowChart
+              points={trend}
+              selectedMonth={month}
+              onSelectMonth={setMonth}
+              monthLabel={monthLabel}
+              shortMonthLabel={shortMonthLabel}
+            />
             <details className="data-alternative">
-              <summary>Ver dados em tabela</summary>
+              <summary>Ver fluxo em tabela</summary>
               <table>
                 <thead>
                   <tr>
-                    <th>Categoria</th>
-                    <th>Valor</th>
+                    <th>Mês</th>
+                    <th>Receitas</th>
+                    <th>Despesas</th>
+                    <th>Saldo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {expensesByCategory.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.name}</td>
-                      <td>{formatBRL(item.value)}</td>
+                  {trend.map((item) => (
+                    <tr key={item.month}>
+                      <td>{monthLabel(item.month)}</td>
+                      <td>{formatBRL(item.income)}</td>
+                      <td>{formatBRL(item.expense)}</td>
+                      <td>{formatBRL(item.result)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -920,160 +917,158 @@ export default function PlannerApp({
             </details>
           </article>
 
-          <article className="panel panel--budgets">
-            <header className="panel-header">
+          <article className="panel manager-panel manager-panel--distribution">
+            <header className="manager-panel__header">
               <div>
-                <p className="eyebrow">PLANEJADO</p>
-                <h2>Orçamentos</h2>
+                <h2>
+                  <PieChart size={21} /> Distribuição das despesas
+                </h2>
+                <p>Selecione uma categoria para detalhar os principais gastos.</p>
               </div>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="Criar orçamento"
-                onClick={() => setModal({ kind: "budget" })}
-              >
-                <Plus size={18} />
-              </button>
             </header>
-            <div className="compact-list">
-              {budgets.slice(0, 3).map((budget) => {
-                const progress = budgetProgress(budget, state.transactions, month);
-                const category = state.categories.find(
-                  (item) => item.id === budget.categoryId,
-                );
-                return (
-                  <div className="progress-item" key={budget.id}>
-                    <div>
-                      <strong>{category?.name ?? "Categoria"}</strong>
-                      <span>
-                        {formatBRL(progress.used)} de {formatBRL(budget.limitCents)}
-                      </span>
-                    </div>
-                    <ProgressBar
-                      value={progress.percent}
-                      tone={progress.status as "normal" | "warning" | "exceeded"}
-                      label={
-                        (category?.name ?? "Orçamento") + ": " + progress.percent + "%"
-                      }
-                    />
-                  </div>
-                );
-              })}
-              {!budgets.length && (
-                <EmptyState
-                  icon={Gauge}
-                  title="Planeje sem pressão"
-                  text="Defina um limite mensal para uma categoria importante."
-                  action="Criar orçamento"
-                  onAction={() => setModal({ kind: "budget" })}
-                  compact
-                />
-              )}
-            </div>
+            {expensesByCategory.length ? (
+              <ExpenseDonut
+                categories={expensesByCategory}
+                selectedId={dashboardCategory}
+                onSelect={setDashboardCategory}
+              />
+            ) : (
+              <EmptyState
+                icon={PieChart}
+                title="Ainda não há despesas neste mês"
+                text="Adicione uma despesa para visualizar a distribuição por categoria."
+                action="Adicionar despesa"
+                onAction={() =>
+                  setModal({ kind: "transaction", transactionType: "expense" })
+                }
+                compact
+              />
+            )}
           </article>
 
-          <article className="panel panel--goals">
-            <header className="panel-header">
+          <article className="panel manager-panel manager-panel--ranking">
+            <header className="manager-panel__header">
               <div>
-                <p className="eyebrow">PRÓXIMOS PASSOS</p>
-                <h2>Metas</h2>
+                <h2>
+                  <TrendingDown size={21} /> Principais gastos
+                </h2>
+                <p>
+                  {selectedCategoryName
+                    ? `Filtrando por ${selectedCategoryName}.`
+                    : "Maiores despesas pagas no mês."}
+                </p>
               </div>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="Criar meta"
-                onClick={() => setModal({ kind: "goal" })}
-              >
-                <Plus size={18} />
-              </button>
-            </header>
-            <div className="compact-list">
-              {state.goals.slice(0, 3).map((goal) => {
-                const progress = goalProgress(goal);
-                return (
-                  <div className="progress-item" key={goal.id}>
-                    <div>
-                      <strong>{goal.name}</strong>
-                      <span>{progress.percent}% concluída</span>
-                    </div>
-                    <ProgressBar
-                      value={progress.percent}
-                      tone="goal"
-                      label={goal.name + ": " + progress.percent + "%"}
-                    />
-                  </div>
-                );
-              })}
-              {!state.goals.length && (
-                <EmptyState
-                  icon={PiggyBank}
-                  title="Dê nome ao próximo sonho"
-                  text="Uma meta transforma intenção em progresso visível."
-                  action="Criar meta"
-                  onAction={() => setModal({ kind: "goal" })}
-                  compact
-                />
+              {dashboardCategory && (
+                <button
+                  className="text-button"
+                  type="button"
+                  onClick={() => setDashboardCategory("")}
+                >
+                  Limpar
+                </button>
               )}
-            </div>
+            </header>
+            <ol className="manager-ranking">
+              {rankedExpenses.map((item, index) => (
+                <li key={item.id}>
+                  <span>{index + 1}</span>
+                  <p>
+                    <strong>{item.description}</strong>
+                    <small>{formatDate(item.date)}</small>
+                  </p>
+                  <b>{formatBRL(item.amountCents)}</b>
+                </li>
+              ))}
+            </ol>
+            {!rankedExpenses.length && (
+              <p className="muted-copy">Nenhuma despesa para esta seleção.</p>
+            )}
           </article>
 
-          <article className="panel panel--wide panel--transactions">
-            <header className="panel-header">
+          <article className="panel manager-panel manager-panel--goals">
+            <header className="manager-panel__header">
               <div>
-                <p className="eyebrow">MOVIMENTO RECENTE</p>
-                <h2>Últimas transações</h2>
+                <h2>
+                  <GoalIcon size={21} /> Metas financeiras
+                </h2>
+                <p>Progresso dos objetivos que você escolheu.</p>
               </div>
               <button
                 className="text-button"
                 type="button"
-                onClick={() => goTo("transactions")}
+                onClick={() => goTo("goals")}
               >
                 Ver todas <ChevronRight size={16} />
               </button>
             </header>
-            <TransactionList
-              items={sortTransactions(state.transactions).slice(0, 5)}
-              state={state}
-              onEdit={(item) => setModal({ kind: "transaction", item })}
-              onDelete={(item) =>
-                setDeleteIntent({
-                  table: "transactions",
-                  id: item.id,
-                  label: item.description,
-                })
-              }
-              onDuplicate={duplicateTransaction}
-              compact
-            />
-            <p className="closing-quote">
-              <span aria-hidden="true">“</span>
-              Mais consciência hoje.
-              <br /> Mais liberdade amanhã.
-            </p>
+            <div className="manager-progress-list">
+              {state.goals.slice(0, 2).map((goal) => {
+                const progress = goalProgress(goal);
+                return (
+                  <div key={goal.id}>
+                    <p>
+                      <strong>{goal.name}</strong>
+                      <span>{progress.percent}%</span>
+                    </p>
+                    <ProgressBar
+                      value={progress.percent}
+                      tone="goal"
+                      label={`${goal.name}: ${progress.percent}%`}
+                    />
+                    <small>
+                      {formatBRL(goal.currentCents)} de {formatBRL(goal.targetCents)}
+                    </small>
+                  </div>
+                );
+              })}
+              {!state.goals.length && (
+                <p className="muted-copy">
+                  Crie uma meta para acompanhar seu próximo objetivo.
+                </p>
+              )}
+            </div>
           </article>
 
-          <aside className="editorial-callout">
-            <div>
-              <h2>Pequenas decisões também constroem grandes mudanças.</h2>
-              <p>Você consegue. E a Colmeia caminha com você.</p>
-              <span aria-hidden="true" />
-            </div>
-            <Image
-              src={assetBasePath + "/brand/plant-photo.png"}
-              alt="Folhas iluminadas pelo sol sobre uma parede em tom de mel"
-              width={1536}
-              height={1097}
-              unoptimized
-            />
-          </aside>
-
-          <article className="panel panel--upcoming">
-            <header className="panel-header">
+          <article className="panel manager-panel manager-panel--insights">
+            <header className="manager-panel__header">
               <div>
-                <p className="eyebrow">NO RADAR</p>
-                <h2>Próximos compromissos</h2>
+                <h2>
+                  <Lightbulb size={21} /> Insights do mês
+                </h2>
+                <p>Leituras automáticas, baseadas somente nos seus registros.</p>
               </div>
-              <BellRing size={19} />
+              <InfoTooltip label="Como os insights são criados">
+                Os insights comparam meses, orçamentos e metas. Eles orientam a leitura,
+                mas não são recomendação financeira.
+              </InfoTooltip>
+            </header>
+            <div className="manager-insights">
+              {insights.map((insight) => (
+                <div key={insight.id} data-tone={insight.tone}>
+                  {insight.tone === "positive" ? (
+                    <TrendingUp size={18} />
+                  ) : insight.tone === "attention" ? (
+                    <TrendingDown size={18} />
+                  ) : (
+                    <CircleDollarSign size={18} />
+                  )}
+                  <p>
+                    <strong>{insight.title}</strong>
+                    <small>{insight.detail}</small>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="panel manager-panel manager-panel--upcoming">
+            <header className="manager-panel__header">
+              <div>
+                <h2>
+                  <BellRing size={21} /> Próximos compromissos
+                </h2>
+                <p>Datas previstas para os próximos descontos.</p>
+              </div>
             </header>
             <div className="upcoming-list">
               {upcoming.map(({ transaction, nextDate }) => (
@@ -1092,6 +1087,89 @@ export default function PlannerApp({
                 </p>
               )}
             </div>
+          </article>
+
+          <article className="panel manager-panel manager-panel--budgets">
+            <header className="manager-panel__header">
+              <div>
+                <h2>
+                  <Gauge size={21} /> Orçamentos em atenção
+                </h2>
+                <p>Limites mais próximos de serem atingidos.</p>
+              </div>
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => goTo("budgets")}
+              >
+                Ver todos <ChevronRight size={16} />
+              </button>
+            </header>
+            <div className="manager-progress-list">
+              {budgets.slice(0, 2).map(({ budget, progress }) => {
+                const category = state.categories.find(
+                  (item) => item.id === budget.categoryId,
+                );
+                return (
+                  <div key={budget.id}>
+                    <p>
+                      <strong>{category?.name ?? "Categoria"}</strong>
+                      <span>{progress.percent}%</span>
+                    </p>
+                    <ProgressBar
+                      value={progress.percent}
+                      tone={progress.status as "normal" | "warning" | "exceeded"}
+                      label={`${category?.name ?? "Orçamento"}: ${progress.percent}%`}
+                    />
+                    <small>
+                      {formatBRL(progress.used)} de {formatBRL(budget.limitCents)}
+                    </small>
+                  </div>
+                );
+              })}
+              {!budgets.length && (
+                <p className="muted-copy">
+                  Nenhum orçamento ativo em {monthLabel(month)}.
+                </p>
+              )}
+            </div>
+          </article>
+
+          <article
+            className={`manager-projection manager-projection--${projection.status} manager-projection--${projection.result < 0 ? "negative" : "positive"}`}
+          >
+            <span className="manager-projection__icon" aria-hidden="true">
+              <ChartNoAxesCombined size={24} />
+            </span>
+            <div>
+              <h2>
+                {projection.status === "actual"
+                  ? "Resultado do período"
+                  : "Projeção para o fim do mês"}
+              </h2>
+              <p>
+                {projection.status === "projected" ? (
+                  <>
+                    Mantendo o ritmo das movimentações pagas, o mês pode fechar em{" "}
+                    <strong>{formatBRL(projection.result)}</strong>.
+                  </>
+                ) : projection.status === "actual" ? (
+                  <>
+                    O período fechou com saldo de{" "}
+                    <strong>{formatBRL(projection.result)}</strong>.
+                  </>
+                ) : (
+                  "Ainda não há movimentações suficientes para criar uma projeção responsável."
+                )}
+              </p>
+            </div>
+            <InfoTooltip label="Entenda a projeção">
+              {projection.status === "projected"
+                ? `Estimativa pela média diária dos ${projection.elapsedDays} dias decorridos, projetada para ${projection.totalDays} dias. Movimentações pendentes não entram no cálculo.`
+                : projection.status === "actual"
+                  ? "Este é o saldo efetivamente registrado no mês encerrado, não uma previsão."
+                  : "A projeção aparece no mês atual após o terceiro dia, desde que exista ao menos uma receita ou despesa paga."}
+            </InfoTooltip>
           </article>
         </section>
       </>
@@ -1546,25 +1624,19 @@ export default function PlannerApp({
       previousMonth(reportMonth),
     );
     const categories = categoryTotals(filtered, state.categories, reportMonth);
-    const maxCategory = Math.max(...categories.map((item) => item.value), 1);
     const biggest = sortTransactions(filtered.filter((item) => item.type === "expense"))
       .sort((a, b) => b.amountCents - a.amountCents)
       .slice(0, 5);
-    const trend = Array.from({ length: 6 }, (_, index) =>
-      shiftMonth(reportMonth, index - 5),
-    ).map((trendMonth) => ({
-      month: trendMonth,
-      ...summarizeMonth(scopedTransactions, trendMonth),
-    }));
-    const maxTrend = Math.max(
-      ...trend.flatMap((item) => [item.income, item.expense]),
-      1,
-    );
+    const trend = monthlyTrend(scopedTransactions, reportMonth, 6);
     const reportBudgets = state.budgets.filter((item) =>
       isBudgetActiveInMonth(item, reportMonth),
     );
     const hasScopedFilters = Boolean(reportCategory || reportAccount || reportCard);
     const comparison = (current: number, previous: number, suffix = "%") => {
+      if (previous === 0)
+        return current === 0
+          ? "Sem movimentação nos dois meses"
+          : "Sem base no mês anterior";
       const value = comparisonPercent(current, previous);
       return `${value > 0 ? "+" : ""}${value}${suffix} vs. mês anterior`;
     };
@@ -1646,30 +1718,42 @@ export default function PlannerApp({
             </button>
           )}
         </section>
-        <section className="metric-grid report-metrics">
-          <article className="metric-card">
-            <p>Receitas</p>
-            <strong>{formatBRL(reportSummary.income)}</strong>
-            <small>{comparison(reportSummary.income, previousSummary.income)}</small>
-          </article>
-          <article className="metric-card">
-            <p>Despesas</p>
-            <strong>{formatBRL(reportSummary.expense)}</strong>
-            <small>{comparison(reportSummary.expense, previousSummary.expense)}</small>
-          </article>
-          <article className="metric-card metric-card--featured">
-            <p>Saldo do período</p>
-            <strong>{formatBRL(reportSummary.result)}</strong>
-            <small>{comparison(reportSummary.result, previousSummary.result)}</small>
-          </article>
-          <article className="metric-card">
-            <p>Comprometimento</p>
-            <strong>{reportSummary.committed}%</strong>
-            <small>
-              {commitmentDifference > 0 ? "+" : ""}
-              {commitmentDifference} p.p. vs. mês anterior
-            </small>
-          </article>
+        <section
+          className="manager-metrics report-metrics"
+          aria-label="Resumo do relatório"
+        >
+          <MetricCard
+            icon={TrendingUp}
+            label="Receitas"
+            value={formatBRL(reportSummary.income)}
+            detail={comparison(reportSummary.income, previousSummary.income)}
+            tooltip="Receitas pagas que correspondem aos filtros selecionados."
+            tone="income"
+          />
+          <MetricCard
+            icon={TrendingDown}
+            label="Despesas"
+            value={formatBRL(reportSummary.expense)}
+            detail={comparison(reportSummary.expense, previousSummary.expense)}
+            tooltip="Despesas pagas que correspondem aos filtros selecionados."
+            tone="expense"
+          />
+          <MetricCard
+            icon={CircleDollarSign}
+            label="Saldo do período"
+            value={formatBRL(reportSummary.result)}
+            detail={comparison(reportSummary.result, previousSummary.result)}
+            tooltip="Receitas pagas menos despesas pagas para os filtros escolhidos."
+            tone="balance"
+          />
+          <MetricCard
+            icon={Gauge}
+            label="Comprometimento"
+            value={`${reportSummary.committed}%`}
+            detail={`${commitmentDifference > 0 ? "+" : ""}${commitmentDifference} p.p. vs. mês anterior`}
+            tooltip="Parcela das receitas filtradas que foi consumida pelas despesas pagas."
+            tone="commitment"
+          />
         </section>
         <section className="report-dashboard">
           <article className="panel report-panel report-panel--trend">
@@ -1691,40 +1775,24 @@ export default function PlannerApp({
                 </span>
               </div>
             </header>
-            <div className="cashflow-chart" aria-label="Receitas e despesas por mês">
-              {trend.map((item) => (
-                <button
-                  key={item.month}
-                  className={item.month === reportMonth ? "active" : ""}
-                  type="button"
-                  data-month={item.month}
-                  onClick={() => setReportMonth(item.month)}
-                  aria-pressed={item.month === reportMonth}
-                  title={`${monthLabel(item.month)}: receitas ${formatBRL(item.income)}; despesas ${formatBRL(item.expense)}`}
-                >
-                  <span className="cashflow-chart__bars" aria-hidden="true">
-                    <i
-                      className="cashflow-chart__income"
-                      style={{
-                        height: item.income
-                          ? `${Math.max(5, (item.income / maxTrend) * 100)}%`
-                          : "0",
-                      }}
-                    />
-                    <i
-                      className="cashflow-chart__expense"
-                      style={{
-                        height: item.expense
-                          ? `${Math.max(5, (item.expense / maxTrend) * 100)}%`
-                          : "0",
-                      }}
-                    />
-                  </span>
-                  <strong>{shortMonthLabel(item.month)}</strong>
-                  <small>{formatBRL(item.result)}</small>
-                </button>
-              ))}
+            <div className="chart-legend manager-chart-legend" aria-label="Legenda">
+              <span>
+                <i className="chart-legend__income" /> Receitas
+              </span>
+              <span>
+                <i className="chart-legend__expense" /> Despesas
+              </span>
+              <span>
+                <i className="chart-legend__balance" /> Saldo
+              </span>
             </div>
+            <CashFlowChart
+              points={trend}
+              selectedMonth={reportMonth}
+              onSelectMonth={setReportMonth}
+              monthLabel={monthLabel}
+              shortMonthLabel={shortMonthLabel}
+            />
           </article>
 
           <article className="panel report-panel report-panel--categories">
@@ -1737,33 +1805,11 @@ export default function PlannerApp({
               </div>
             </header>
             {categories.length ? (
-              <div className="report-category-list">
-                {categories.slice(0, 7).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={reportCategory === item.id ? "active" : ""}
-                    aria-pressed={reportCategory === item.id}
-                    onClick={() =>
-                      setReportCategory(reportCategory === item.id ? "" : item.id)
-                    }
-                  >
-                    <span className="report-category-list__name">
-                      <i style={{ background: item.color }} />
-                      {item.name}
-                    </span>
-                    <span className="report-category-list__track" aria-hidden="true">
-                      <i
-                        style={{
-                          width: `${Math.max(3, (item.value / maxCategory) * 100)}%`,
-                          background: item.color,
-                        }}
-                      />
-                    </span>
-                    <strong>{formatBRL(item.value)}</strong>
-                  </button>
-                ))}
-              </div>
+              <ExpenseDonut
+                categories={categories}
+                selectedId={reportCategory}
+                onSelect={setReportCategory}
+              />
             ) : (
               <p className="muted-copy">Sem despesas para os filtros escolhidos.</p>
             )}
@@ -2267,14 +2313,6 @@ export default function PlannerApp({
             <BrandMark compact />
             <strong>COLMEIA</strong>
           </div>
-          <label className="month-picker">
-            <span className="sr-only">Mês da visão geral</span>
-            <input
-              type="month"
-              value={month}
-              onChange={(event) => setMonth(event.target.value)}
-            />
-          </label>
           <div className="topbar-actions">
             <button
               className="quick-add"
@@ -2312,32 +2350,108 @@ export default function PlannerApp({
           {screens[activeNav]()}
         </main>
         <nav className="bottom-nav" aria-label="Navegação móvel">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={activeNav === item.id ? "active" : ""}
-                onClick={() => goTo(item.id)}
-                aria-label={item.label}
-              >
-                <Icon size={19} />
-                <span aria-hidden="true">
-                  {item.mobileBreakAt ? (
-                    <>
-                      {item.mobileLabel.slice(0, item.mobileBreakAt)}
-                      <wbr />
-                      {item.mobileLabel.slice(item.mobileBreakAt)}
-                    </>
-                  ) : (
-                    item.mobileLabel
-                  )}
-                </span>
-              </button>
-            );
-          })}
+          <button
+            type="button"
+            className={activeNav === "dashboard" ? "active" : ""}
+            onClick={() => goTo("dashboard")}
+            aria-label="Visão geral"
+          >
+            <LayoutDashboard size={20} />
+            <span aria-hidden="true">Visão</span>
+          </button>
+          <button
+            type="button"
+            className={activeNav === "transactions" ? "active" : ""}
+            onClick={() => goTo("transactions")}
+            aria-label="Transações"
+          >
+            <ReceiptText size={20} />
+            <span aria-hidden="true">Extrato</span>
+          </button>
+          <button
+            type="button"
+            className="bottom-nav__add"
+            disabled={!online}
+            onClick={() => setModal({ kind: "transaction" })}
+            aria-label="Nova transação"
+          >
+            <Plus size={25} />
+            <span aria-hidden="true">Adicionar</span>
+          </button>
+          <button
+            type="button"
+            className={activeNav === "budgets" ? "active" : ""}
+            onClick={() => goTo("budgets")}
+            aria-label="Orçamentos"
+          >
+            <Gauge size={20} />
+            <span aria-hidden="true">Orçar</span>
+          </button>
+          <button
+            type="button"
+            className={
+              moreOpen ||
+              ["accounts", "goals", "reports", "settings"].includes(activeNav)
+                ? "active"
+                : ""
+            }
+            onClick={() => setMoreOpen((value) => !value)}
+            aria-label="Mais opções"
+            aria-expanded={moreOpen}
+          >
+            <Ellipsis size={22} />
+            <span aria-hidden="true">Mais</span>
+          </button>
         </nav>
+        {moreOpen && (
+          <>
+            <button
+              className="mobile-more__scrim"
+              type="button"
+              aria-label="Fechar mais opções"
+              onClick={() => setMoreOpen(false)}
+            />
+            <aside
+              className="mobile-more"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mais opções de navegação"
+            >
+              <header>
+                <h2>Mais opções</h2>
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => setMoreOpen(false)}
+                  aria-label="Fechar"
+                >
+                  <X size={19} />
+                </button>
+              </header>
+              <nav>
+                {navItems
+                  .filter((item) =>
+                    ["accounts", "goals", "reports", "settings"].includes(item.id),
+                  )
+                  .map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={activeNav === item.id ? "active" : ""}
+                        onClick={() => goTo(item.id)}
+                      >
+                        <Icon size={20} />
+                        <span>{item.label}</span>
+                        <ChevronRight size={17} />
+                      </button>
+                    );
+                  })}
+              </nav>
+            </aside>
+          </>
+        )}
       </div>
       {modal && (
         <EntryModal

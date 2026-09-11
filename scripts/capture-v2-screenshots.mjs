@@ -42,30 +42,30 @@ const shots = [
     { width: 1280, height: 900 },
     "Encontramos dados deste planejador neste navegador.",
   ],
-  [
-    "dashboard-empty.png",
-    "empty",
-    { width: 1440, height: 1000 },
-    "Seu dinheiro, com mais clareza.",
-  ],
+  ["dashboard-empty.png", "empty", { width: 1440, height: 1000 }, "Bom dia, Lucas!"],
   [
     "dashboard-migrated.png",
     "migrated",
     { width: 1440, height: 1000 },
-    "Seu dinheiro, com mais clareza.",
+    "Bom dia, Lucas!",
   ],
-  [
-    "dashboard-mobile.png",
-    "migrated",
-    { width: 390, height: 844 },
-    "Seu dinheiro, com mais clareza.",
-  ],
+  ["dashboard-mobile.png", "migrated", { width: 390, height: 844 }, "Bom dia, Lucas!"],
   ["reports-desktop.png", "reports", { width: 1440, height: 1100 }, "Relatórios"],
   ["reports-mobile.png", "reports", { width: 390, height: 844 }, "Relatórios"],
   ["profile-privacy.png", "profile", { width: 1440, height: 1200 }, "Configurações"],
 ];
 
-for (const [filename, review, viewport, heading] of shots) {
+const requestedShots = new Set(
+  (process.env.COLMEIA_SCREENSHOTS ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean),
+);
+const selectedShots = requestedShots.size
+  ? shots.filter(([filename]) => requestedShots.has(filename))
+  : shots;
+
+for (const [filename, review, viewport, heading] of selectedShots) {
   const context = await browser.newContext({ viewport });
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:3000/?review=${review}`);
@@ -82,4 +82,4 @@ for (const [filename, review, viewport, heading] of shots) {
 
 await browser.close();
 server.kill();
-console.log(`${shots.length} screenshots salvas em ${output}`);
+console.log(`${selectedShots.length} screenshots salvas em ${output}`);

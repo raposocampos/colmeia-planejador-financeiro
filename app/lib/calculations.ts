@@ -1,5 +1,29 @@
 import type { Account, Budget, Category, Goal, Transaction } from "./types";
 
+export interface MonthlyTrendPoint {
+  month: string;
+  income: number;
+  expense: number;
+  result: number;
+  committed: number;
+}
+
+export interface DashboardInsight {
+  id: string;
+  tone: "positive" | "attention" | "neutral";
+  title: string;
+  detail: string;
+}
+
+export interface MonthProjection {
+  status: "projected" | "actual" | "unavailable";
+  income: number;
+  expense: number;
+  result: number;
+  elapsedDays: number;
+  totalDays: number;
+}
+
 export const formatBRL = (cents: number): string =>
   new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -141,6 +165,18 @@ export const summarizeMonth = (
   };
 };
 
+export const monthlyTrend = (
+  transactions: Transaction[],
+  month: string,
+  length: 6 | 12 = 6,
+): MonthlyTrendPoint[] =>
+  Array.from({ length }, (_, index) => shiftMonth(month, index - length + 1)).map(
+    (trendMonth) => ({
+      month: trendMonth,
+      ...summarizeMonth(transactions, trendMonth),
+    }),
+  );
+
 export const accountBalance = (account: Account, transactions: Transaction[]): number =>
   transactions.reduce((balance, item) => {
     if (item.status !== "paid") return balance;
@@ -170,7 +206,7 @@ export const categoryTotals = (
 ): Array<{ id: string; name: string; color: string; value: number }> => {
   const totals = new Map<string, number>();
   transactionsInMonth(transactions, month)
-    .filter((item) => item.type === "expense")
+    .filter((item) => item.type === "expense" && item.status === "paid")
     .forEach((item) => {
       if (!item.categoryId) return;
       totals.set(
@@ -235,4 +271,176 @@ export const goalProgress = (
 export const comparisonPercent = (current: number, previous: number): number => {
   if (previous === 0) return current === 0 ? 0 : 100;
   return Math.round(((current - previous) / Math.abs(previous)) * 100);
+};
+
+export const projectMonth = (
+  transactions: Transaction[],
+  month: string,
+  reference = new Date(),
+): MonthProjection => {
+  const referenceMonth = currentMonth(reference);
+  const summary = summarizeMonth(transactions, month);
+  const [year, monthNumber] = month.split("-").map(Number);
+  const totalDays = new Date(year, monthNumber, 0).getDate();
+
+  if (month < referenceMonth)
+    return {
+      status: "actual",
+      income: summary.income,
+      expense: summary.expense,
+      result: summary.result,
+      elapsedDays: totalDays,
+      totalDays,
+    };
+
+  if (
+    month > referenceMonth ||
+    reference.getDate() < 3 ||
+    (!summary.income && !summary.expense)
+  )
+    return {
+      status: "unavailable",
+      income: summary.income,
+      expense: summary.expense,
+      result: summary.result,
+      elapsedDays: month === referenceMonth ? reference.getDate() : 0,
+      totalDays,
+    };
+
+  const elapsedDays = Math.min(reference.getDate(), totalDays);
+  const income = Math.round((summary.income / elapsedDays) * totalDays);
+  const expense = Math.round((summary.expense / elapsedDays) * totalDays);
+  return {
+    status: "projected",
+    income,
+    expense,
+    result: income - expense,
+    elapsedDays,
+    totalDays,
+  };
+};
+
+export const buildDashboardInsights = (
+  transactions: Transaction[],
+  categories: Category[],
+  budgets: Budget[],
+  goals: Goal[],
+  month: string,
+): DashboardInsight[] => {
+  const insights: DashboardInsight[] = [];
+  const current = summarizeMonth(transactions, month);
+  const previous = summarizeMonth(transactions, previousMonth(month));
+  const categoryById = new Map(categories.map((category) => [category.id, category]));
+
+  const budgetAlerts = budgets
+    .filter((budget) => isBudgetActiveInMonth(budget, month))
+    .map((budget) => ({
+      budget,
+      progress: budgetProgress(budget, transactions, month),
+    }))
+    .filter(({ progress }) => progress.percent >= 80)
+    .sort((left, right) => right.progress.percent - left.progress.percent);
+
+  if (budgetAlerts.length) {
+    const { budget, progress } = budgetAlerts[0];
+    const categoryName = categoryById.get(budget.categoryId)?.name ?? "uma categoria";
+    insights.push({
+      id: `budget-${budget.id}`,
+      tone: "attention",
+      title:
+        progress.percent > 100
+          ? `O orçamento de ${categoryName} ultrapassou o limite.`
+          : `O orçamento de ${categoryName} já chegou a ${progress.percent}%.`,
+      detail:
+        progress.percent > 100
+          ? `O valor acima do planejado é ${formatBRL(progress.used - budget.limitCents)}.`
+          : `Ainda restam ${formatBRL(progress.remaining)} neste mês.`,
+    });
+  }
+
+  if (current.result < 0) {
+    insights.push({
+      id: "negative-result",
+      tone: "attention",
+      title: "As despesas estão acima das receitas neste mês.",
+      detail: `A diferença atual é ${formatBRL(Math.abs(current.result))}. Rever as maiores categorias pode ajudar.`,
+    });
+  } else if (current.income > 0) {
+    insights.push({
+      id: "positive-result",
+      tone: "positive",
+      title: "O mês está com saldo positivo.",
+      detail: `${formatBRL(current.result)} permanecem disponíveis após as despesas pagas.`,
+    });
+  }
+
+  const currentCategories = categoryTotals(transactions, categories, month);
+  const previousCategories = new Map(
+    categoryTotals(transactions, categories, previousMonth(month)).map((item) => [
+      item.id,
+      item.value,
+    ]),
+  );
+  const comparableCategories = currentCategories
+    .map((item) => {
+      const previousValue = previousCategories.get(item.id) ?? 0;
+      return {
+        ...item,
+        previousValue,
+        change:
+          previousValue > 0
+            ? Math.round(((item.value - previousValue) / previousValue) * 100)
+            : 0,
+      };
+    })
+    .filter((item) => item.previousValue > 0 && Math.abs(item.change) >= 10)
+    .sort((left, right) => Math.abs(right.change) - Math.abs(left.change));
+
+  if (comparableCategories.length) {
+    const category = comparableCategories[0];
+    const decreased = category.change < 0;
+    insights.push({
+      id: `category-${category.id}`,
+      tone: decreased ? "positive" : "attention",
+      title: `${category.name} ${decreased ? "diminuiu" : "aumentou"} ${Math.abs(category.change)}%.`,
+      detail: `Comparação com ${previousMonth(month)}: ${formatBRL(category.previousValue)} para ${formatBRL(category.value)}.`,
+    });
+  } else if (
+    previous.income === 0 &&
+    previous.expense === 0 &&
+    currentCategories.length
+  ) {
+    insights.push({
+      id: "first-comparison",
+      tone: "neutral",
+      title: "Este mês inicia seu histórico de comparação.",
+      detail:
+        "Continue registrando as movimentações para acompanhar tendências nos próximos meses.",
+    });
+  }
+
+  if (insights.length < 3 && goals.length) {
+    const goal = [...goals]
+      .map((item) => ({ item, progress: goalProgress(item) }))
+      .sort((left, right) => right.progress.percent - left.progress.percent)[0];
+    insights.push({
+      id: `goal-${goal.item.id}`,
+      tone: goal.progress.percent >= 75 ? "positive" : "neutral",
+      title: `${goal.item.name} está ${goal.progress.percent}% concluída.`,
+      detail:
+        goal.progress.remaining > 0
+          ? `Faltam ${formatBRL(goal.progress.remaining)} para alcançar a meta.`
+          : "Meta concluída. Vale registrar o próximo objetivo.",
+    });
+  }
+
+  if (!insights.length)
+    insights.push({
+      id: "empty-month",
+      tone: "neutral",
+      title: "Seu painel ganhará contexto com as primeiras movimentações.",
+      detail: "Registre receitas e despesas para acompanhar o mês com mais clareza.",
+    });
+
+  return insights.slice(0, 3);
 };
