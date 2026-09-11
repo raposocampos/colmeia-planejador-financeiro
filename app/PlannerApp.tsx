@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -164,6 +165,7 @@ export default function PlannerApp({
   onDeleteAccount,
   initialNav = "dashboard",
 }: PlannerAppProps) {
+  const assetBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   const [state, setState] = useState<PlannerState>(emptyState);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -684,52 +686,62 @@ export default function PlannerApp({
     const budgets = state.budgets.filter((item) => item.month === month);
     return (
       <>
-        <section className="hero-summary">
+        <section className="hero-summary" key={"hero-" + month}>
           <div className="hero-copy">
             <p className="eyebrow">SUA COLMEIA FINANCEIRA</p>
             <h1>Seu dinheiro, com mais clareza.</h1>
             <p>
-              Uma leitura simples de {monthLabel(month)} para você decidir o próximo
-              passo com tranquilidade.
+              {summary.result < 0
+                ? `${monthLabel(month)} mostra um mês desafiador, com despesas acima das receitas. Você ainda tem espaço para retomar o controle e fazer escolhas mais conscientes.`
+                : `${monthLabel(month)} mostra um caminho positivo. Continue acompanhando suas escolhas para manter o mês sob controle.`}
             </p>
             <div className="hero-actions">
               <button
                 className="button"
                 type="button"
-                onClick={() =>
-                  setModal({ kind: "transaction", transactionType: "expense" })
-                }
+                onClick={() => setModal({ kind: "transaction" })}
               >
-                <ArrowUpRight size={18} /> Adicionar despesa
+                <Plus size={18} /> Nova transação
               </button>
               <button
-                className="button button--dark"
+                className="text-button"
                 type="button"
-                onClick={() =>
-                  setModal({ kind: "transaction", transactionType: "income" })
-                }
+                onClick={() => goTo("reports")}
               >
-                <ArrowDownLeft size={18} /> Adicionar receita
+                Ver relatórios <ChevronRight size={17} />
               </button>
             </div>
           </div>
           <div className="balance-panel">
-            <span>Saldo total</span>
-            <strong>{formatBRL(balance)}</strong>
-            <small>
-              Somando {state.accounts.filter((item) => !item.archived).length} conta(s)
-              ativa(s)
-            </small>
-            <div className="balance-cells" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
+            <Image
+              className="balance-mark"
+              src={assetBasePath + "/brand/colmeia-symbol.png"}
+              alt=""
+              width={72}
+              height={72}
+              aria-hidden="true"
+              unoptimized
+            />
+            <div className="balance-reading">
+              <span>Saldo total</span>
+              <strong>{formatBRL(balance)}</strong>
+              <small>
+                Somando {state.accounts.filter((item) => !item.archived).length}{" "}
+                conta(s) ativa(s)
+              </small>
             </div>
+            <em className="balance-note">
+              Disciplina hoje,
+              <br /> mais escolhas amanhã.
+            </em>
           </div>
         </section>
 
-        <section className="metric-grid" aria-label="Resumo do mês">
+        <section
+          className="metric-grid"
+          aria-label="Resumo do mês"
+          key={"metrics-" + month}
+        >
           <article className="metric-card">
             <span className="metric-icon metric-icon--income">
               <TrendingUp size={20} />
@@ -781,11 +793,14 @@ export default function PlannerApp({
         </section>
 
         <section className="dashboard-grid">
-          <article className="panel panel--wide">
+          <article className="panel panel--wide panel--category">
             <header className="panel-header">
               <div>
                 <p className="eyebrow">LEITURA DO MÊS</p>
                 <h2>Para onde o dinheiro está indo</h2>
+                <p className="panel-description">
+                  Suas principais categorias de despesas em {monthLabel(month)}.
+                </p>
               </div>
               <button
                 className="text-button"
@@ -797,7 +812,7 @@ export default function PlannerApp({
             </header>
             {expensesByCategory.length ? (
               <div className="category-chart">
-                {expensesByCategory.slice(0, 6).map((item) => (
+                {expensesByCategory.slice(0, 7).map((item) => (
                   <div className="category-row" key={item.id}>
                     <span>{item.name}</span>
                     <div className="category-track">
@@ -844,7 +859,7 @@ export default function PlannerApp({
             </details>
           </article>
 
-          <article className="panel">
+          <article className="panel panel--budgets">
             <header className="panel-header">
               <div>
                 <p className="eyebrow">PLANEJADO</p>
@@ -896,7 +911,7 @@ export default function PlannerApp({
             </div>
           </article>
 
-          <article className="panel">
+          <article className="panel panel--goals">
             <header className="panel-header">
               <div>
                 <p className="eyebrow">PRÓXIMOS PASSOS</p>
@@ -941,7 +956,7 @@ export default function PlannerApp({
             </div>
           </article>
 
-          <article className="panel panel--wide">
+          <article className="panel panel--wide panel--transactions">
             <header className="panel-header">
               <div>
                 <p className="eyebrow">MOVIMENTO RECENTE</p>
@@ -956,7 +971,7 @@ export default function PlannerApp({
               </button>
             </header>
             <TransactionList
-              items={sortTransactions(state.transactions).slice(0, 6)}
+              items={sortTransactions(state.transactions).slice(0, 5)}
               state={state}
               onEdit={(item) => setModal({ kind: "transaction", item })}
               onDelete={(item) =>
@@ -969,9 +984,29 @@ export default function PlannerApp({
               onDuplicate={duplicateTransaction}
               compact
             />
+            <p className="closing-quote">
+              <span aria-hidden="true">“</span>
+              Mais consciência hoje.
+              <br /> Mais liberdade amanhã.
+            </p>
           </article>
 
-          <article className="panel">
+          <aside className="editorial-callout">
+            <div>
+              <h2>Pequenas decisões também constroem grandes mudanças.</h2>
+              <p>Você consegue. E a Colmeia caminha com você.</p>
+              <span aria-hidden="true" />
+            </div>
+            <Image
+              src={assetBasePath + "/brand/plant-photo.png"}
+              alt="Folhas iluminadas pelo sol sobre uma parede em tom de mel"
+              width={1536}
+              height={1097}
+              unoptimized
+            />
+          </aside>
+
+          <article className="panel panel--upcoming">
             <header className="panel-header">
               <div>
                 <p className="eyebrow">NO RADAR</p>
@@ -2084,6 +2119,10 @@ export default function PlannerApp({
                 .join("")
                 .toUpperCase()}
             </span>
+            <span className="profile-summary" aria-hidden="true">
+              <small>Olá,</small>
+              <strong>{profile.name}</strong>
+            </span>
           </div>
         </header>
         {!online && (
@@ -2311,9 +2350,11 @@ function TransactionList({
             <div className="transaction-main">
               <strong>{item.description}</strong>
               <span>
-                {category?.name ??
-                  (item.type === "transfer" ? "Transferência" : "Sem categoria")}
-                {account ? " · " + account.name : ""}
+                {compact
+                  ? formatDate(item.date)
+                  : (category?.name ??
+                      (item.type === "transfer" ? "Transferência" : "Sem categoria")) +
+                    (account ? " · " + account.name : "")}
               </span>
             </div>
             <span className="transaction-date">{formatDate(item.date)}</span>

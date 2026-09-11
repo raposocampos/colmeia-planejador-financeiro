@@ -12,6 +12,7 @@ const child = spawn(process.execPath, [executable, mode], {
   stdio: "inherit",
   env: {
     ...process.env,
+    NEXT_PUBLIC_REVIEW_MODE: "false",
     WRANGLER_LOG_PATH: ".wrangler/wrangler.log",
   },
 });
