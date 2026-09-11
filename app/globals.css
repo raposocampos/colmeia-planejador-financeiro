@@ -4052,6 +4052,7 @@
       z-index: 32;
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
+      column-gap: 0;
       overflow-x: hidden;
       border-top: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.96);
@@ -4063,13 +4064,16 @@
 
     .bottom-nav button {
       display: grid;
+      width: 100%;
+      max-width: 100%;
       min-width: 0;
       min-height: 56px;
       grid-template-rows: 22px auto;
       align-content: center;
       place-items: center;
       gap: 0.18rem;
-      margin-inline: 2px;
+      overflow: hidden;
+      margin: 0;
       border-radius: 12px;
       background: transparent;
       padding: 0.35rem 0.08rem;
@@ -4077,6 +4081,16 @@
       font-size: clamp(0.59rem, 2.4vw, 0.7rem);
       line-height: 1.05;
       white-space: nowrap;
+    }
+
+    .bottom-nav button span {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      text-align: center;
+      text-overflow: clip;
+      white-space: normal;
     }
 
     .bottom-nav button svg {
@@ -4663,7 +4677,7 @@
     }
 
     .bottom-nav button {
-      font-size: clamp(0.55rem, 2.7vw, 0.64rem);
+      font-size: clamp(0.56rem, 2.55vw, 0.62rem);
     }
 
     .auth-form-panel {
