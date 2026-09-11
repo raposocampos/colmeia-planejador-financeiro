@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
   assetPrefix: basePath || undefined,
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
+    NEXT_PUBLIC_REVIEW_MODE: process.env.NEXT_PUBLIC_REVIEW_MODE ?? "false",
     NEXT_PUBLIC_SITE_URL: siteUrl,
   },
 };

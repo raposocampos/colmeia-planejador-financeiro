@@ -14,7 +14,7 @@ import type { AppUserProfile } from "./lib/profile";
 
 const profile: AppUserProfile = {
   id: "review-user",
-  name: "Lucas Campos",
+  name: "Lucas",
   email: "lucas.exemplo@colmeia.test",
   emailConfirmed: true,
   providers: ["email", "google"],
@@ -34,71 +34,126 @@ const reviewNav: Partial<Record<string, NavKey>> = {
 const migratedState = (): PlannerState => {
   const state = emptyState();
   const now = new Date().toISOString();
-  state.categories = defaultCategories;
-  state.accounts = [
+  const month = new Date().toISOString().slice(0, 7);
+  const day = (value: number) => `${month}-${String(value).padStart(2, "0")}`;
+  state.categories = [
+    ...defaultCategories,
     {
-      id: "review-account",
-      name: "Conta migrada",
-      type: "digital",
-      initialBalanceCents: 245000,
-      color: "#F8BF4D",
+      id: "carro",
+      name: "Carro",
+      kind: "expense",
+      color: "#F5B942",
+      icon: "carro",
       archived: false,
+      sortOrder: 20,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "conjuge",
+      name: "Cônjuge",
+      kind: "expense",
+      color: "#C6BBA5",
+      icon: "coração",
+      archived: false,
+      sortOrder: 21,
       createdAt: now,
       updatedAt: now,
     },
   ];
+  state.accounts = [
+    ["review-account-main", "Conta principal", "digital", 600000, "#F8BF4D"],
+    ["review-account-savings", "Reserva", "savings", 500000, "#D9A52F"],
+    ["review-account-wallet", "Carteira", "wallet", 400000, "#FFE161"],
+    ["review-account-investment", "Investimentos", "investment", 131560, "#5A7348"],
+  ].map(([id, name, type, initialBalanceCents, color]) => ({
+    id: String(id),
+    name: String(name),
+    type: type as PlannerState["accounts"][number]["type"],
+    initialBalanceCents: Number(initialBalanceCents),
+    color: String(color),
+    archived: false,
+    createdAt: now,
+    updatedAt: now,
+  }));
   state.cards = [
     {
       id: "review-card",
       name: "Cartão Colmeia",
-      limitCents: 420000,
+      limitCents: 500000,
       closingDay: 18,
       dueDay: 25,
-      paymentAccountId: "review-account",
+      paymentAccountId: "review-account-main",
       color: "#231F20",
       archived: false,
       createdAt: now,
       updatedAt: now,
     },
   ];
-  state.transactions = [
-    {
-      id: "review-income",
-      type: "income",
-      description: "Salário",
-      amountCents: 480000,
-      date: new Date().toISOString().slice(0, 10),
-      categoryId: "salario",
-      accountId: "review-account",
-      tags: [],
-      recurrence: "monthly",
-      status: "paid",
-      demo: false,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "review-transaction",
-      type: "expense",
-      description: "Mercado",
-      amountCents: 18240,
-      date: new Date().toISOString().slice(0, 10),
-      categoryId: "alimentacao",
-      accountId: "review-account",
+  const rows: Array<
+    ["income" | "expense", string, number, number, string, "paid" | "pending"]
+  > = [
+    ["expense", "Abastecimento", 32000, 10, "carro", "paid"],
+    ["expense", "Supermercado Extra", 14320, 9, "alimentacao", "paid"],
+    ["income", "Transferência recebida", 58941, 8, "renda-extra", "paid"],
+    ["expense", "Fatura cartão", 200000, 7, "conjuge", "paid"],
+    ["expense", "Farmácia", 8750, 6, "saude", "paid"],
+    ["expense", "Financiamento veículo", 1300000, 5, "carro", "paid"],
+    ["expense", "Seguro do carro", 167702, 5, "carro", "paid"],
+    ["expense", "Empréstimo", 20000, 5, "dividas", "paid"],
+    ["expense", "Parcela renegociada", 12000, 4, "dividas", "paid"],
+    ["expense", "Juros", 9572, 4, "dividas", "paid"],
+    ["expense", "Feira", 8950, 4, "alimentacao", "paid"],
+    ["expense", "Padaria", 9620, 4, "alimentacao", "paid"],
+    ["expense", "Condomínio", 10000, 4, "moradia", "paid"],
+    ["expense", "Energia", 9590, 3, "moradia", "paid"],
+    ["expense", "Internet", 7000, 3, "moradia", "paid"],
+    ["expense", "Consulta", 1590, 3, "saude", "paid"],
+    ["expense", "Papelaria", 500, 3, "outros", "paid"],
+    ["expense", "Café", 430, 3, "outros", "paid"],
+    ["expense", "Estacionamento", 380, 2, "outros", "paid"],
+    ["expense", "Tarifa", 350, 2, "outros", "paid"],
+    ["expense", "Presente", 520, 2, "outros", "paid"],
+    ["expense", "Lavanderia", 460, 2, "outros", "paid"],
+    ["expense", "Chaveiro", 415, 1, "outros", "paid"],
+    ["expense", "Água", 390, 1, "outros", "paid"],
+    ["expense", "Correios", 390, 1, "outros", "paid"],
+    ["expense", "Ajuste do mês", 881, 1, "outros", "paid"],
+    ["expense", "Doação", 0, 1, "outros", "paid"],
+  ];
+  state.transactions = rows.map(
+    ([type, description, amountCents, date, categoryId, status], index) => ({
+      id: `review-transaction-${index}`,
+      type,
+      description,
+      amountCents,
+      date: day(date),
+      categoryId,
+      accountId: "review-account-main",
+      creditCardId: description === "Fatura cartão" ? "review-card" : undefined,
+      paymentMethod: description === "Fatura cartão" ? "Crédito" : "Conta",
       tags: [],
       recurrence: "none",
-      status: "paid",
-      demo: false,
+      status,
+      demo: true,
+      createdAt: now,
+      updatedAt: now,
+    }),
+  );
+  state.budgets = [
+    {
+      id: "review-budget-home",
+      categoryId: "moradia",
+      month,
+      limitCents: 80000,
       createdAt: now,
       updatedAt: now,
     },
-  ];
-  state.budgets = [
     {
-      id: "review-budget",
+      id: "review-budget-food",
       categoryId: "alimentacao",
-      month: new Date().toISOString().slice(0, 7),
-      limitCents: 80000,
+      month,
+      limitCents: 60000,
       createdAt: now,
       updatedAt: now,
     },
@@ -107,12 +162,12 @@ const migratedState = (): PlannerState => {
     {
       id: "review-goal",
       name: "Reserva de emergência",
-      targetCents: 1200000,
-      currentCents: 285000,
+      targetCents: 1500000,
+      currentCents: 465000,
       targetDate: `${new Date().getFullYear() + 1}-12-31`,
-      accountId: "review-account",
+      accountId: "review-account-savings",
       color: "#F8BF4D",
-      icon: "target",
+      icon: "escudo",
       createdAt: now,
       updatedAt: now,
     },
@@ -144,15 +199,26 @@ export default function ReviewApp() {
     () => "auth",
   );
   const currentStage = stage === "auth" ? storedStage : stage;
-  const repository = useMemo(
-    () =>
-      new MemoryPlannerRepository(
-        query in reviewNav && query !== "empty"
-          ? migratedState()
-          : { ...emptyState(), categories: defaultCategories },
-      ),
-    [query],
-  );
+  const repository = useMemo(() => {
+    if (!(query in reviewNav) || query === "empty")
+      return new MemoryPlannerRepository({
+        ...emptyState(),
+        categories: defaultCategories,
+      });
+
+    const state = migratedState();
+    if (query !== "migrated") {
+      const defaultCategoryIds = new Set(
+        defaultCategories.map((category) => category.id),
+      );
+      state.categories = defaultCategories;
+      state.transactions = state.transactions.filter((transaction) =>
+        defaultCategoryIds.has(transaction.categoryId ?? ""),
+      );
+      state.budgets = state.budgets.filter((budget) => budget.categoryId !== "moradia");
+    }
+    return new MemoryPlannerRepository(state);
+  }, [query]);
   configurePlannerRepository(repository);
   const signIn = () => setStage("onboarding");
   if (query === "login" && currentStage === "auth")

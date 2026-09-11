@@ -46,3 +46,12 @@ next-env.d.ts
 /tmp/
 /playwright-report/
 /test-results/
+
+# local brand and design build artifacts
+/.brandbook-build/
+/assets/plates/
+/.impeccable/build/
+/.impeccable/review/
+/output/brandbook/*
+!/output/brandbook/Colmeia-Brandbook-2026-v1.2.pdf
+!/output/brandbook/Colmeia-Brandbook-2026-v1.2.pptx

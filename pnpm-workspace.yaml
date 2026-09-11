@@ -4,9 +4,21 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 overrides:
+  baseline-browser-mapping@>=2.0.0 <2.11.22: 2.11.22
+  brace-expansion@>=3.0.0 <5.0.9: 5.0.9
+  browserslist@<4.28.9: 4.28.9
   esbuild: 0.28.1
-  js-yaml: 4.3.0
-  postcss: 8.5.19
+  fast-uri@>=3.0.0 <3.1.6: 3.1.6
+  js-yaml: 4.3.2
+  nanoid@>=3.0.0 <3.3.19: 3.3.19
+  postcss: 8.5.23
+  sharp@<0.35.4: 0.35.4
+auditConfig:
+  ignoreGhsas:
+    # Temporary, documented build-time-only exceptions. See
+    # docs/security/dependency-audit-exceptions.md.
+    - GHSA-w3rx-r6r6-pgpr
+    - GHSA-5p2g-fcmc-qvqq
 minimumReleaseAgeExclude:
   - "@supabase/auth-js@2.110.7"
   - "@supabase/functions-js@2.110.7"
@@ -16,3 +28,16 @@ minimumReleaseAgeExclude:
   - "@supabase/storage-js@2.110.7"
   - "@supabase/supabase-js@2.110.7"
   - vite@8.1.5
+  - "@babel/core@7.29.1"
+  - brace-expansion@1.1.18 || 5.0.9
+  - fast-uri@3.1.6
+  - postcss@8.5.23
+  - undici@7.29.0
+  - js-yaml@4.3.2
+  - nanoid@3.3.19
+  - browserslist@4.28.9
+  - fflate@0.7.5
+  - vitest@4.1.11
+  - "@vitest/mocker@4.1.11"
+  - baseline-browser-mapping@2.11.22
+  - sharp@0.35.4

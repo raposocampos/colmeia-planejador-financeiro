@@ -7,6 +7,7 @@ const child = spawn(process.execPath, [executable, "build"], {
   env: {
     ...process.env,
     DEPLOY_TARGET: "github-pages",
+    NEXT_PUBLIC_REVIEW_MODE: "false",
   },
 });
 
