@@ -32,8 +32,12 @@
 - Metas exibem percentual, restante e estimativa quando há data.
 - Relatórios respeitam os filtros combinados, com gráfico de seis meses e
   categorias clicáveis para alterar o recorte.
+- A Visão oferece fluxo de caixa de 6 ou 12 meses, insights adaptados aos dados e
+  projeção somente quando existe base mínima explicável.
+- Gráficos e indicadores apresentam valores e fórmulas por tooltip no foco, hover
+  ou toque e mantêm alternativa textual.
 - Dashboard, login, cabeçalho e navegação inferior não geram corte ou overflow em
-  desktop, tablet ou viewport móvel de 390 px.
+  desktop, tablet ou viewports móveis entre 320 e 430 px.
 
 ## Portabilidade e resiliência
 

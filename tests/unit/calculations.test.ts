@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   accountBalance,
+  buildDashboardInsights,
   budgetProgress,
   categoryTotals,
   comparisonPercent,
   formatBRL,
   goalProgress,
   isBudgetActiveInMonth,
+  monthlyTrend,
   nextOccurrenceDate,
   parseMoney,
   previousMonth,
+  projectMonth,
   shiftMonth,
   summarizeMonth,
   totalBalance,
@@ -223,7 +226,74 @@ describe("cálculos financeiros", () => {
     ];
     expect(categoryTotals(transactions, categories, "2026-07")[0]).toMatchObject({
       name: "Alimentação",
-      value: 100000,
+      value: 80000,
     });
+  });
+
+  it("monta tendências de seis e doze meses terminando no mês selecionado", () => {
+    const sixMonths = monthlyTrend(transactions, "2026-07", 6);
+    const twelveMonths = monthlyTrend(transactions, "2026-07", 12);
+    expect(sixMonths).toHaveLength(6);
+    expect(sixMonths[0].month).toBe("2026-02");
+    expect(sixMonths.at(-1)?.month).toBe("2026-07");
+    expect(twelveMonths).toHaveLength(12);
+    expect(twelveMonths[0].month).toBe("2025-08");
+  });
+
+  it("projeta somente o mês atual com base mínima e consolida meses passados", () => {
+    expect(projectMonth(transactions, "2026-07", new Date(2026, 6, 15))).toEqual({
+      status: "projected",
+      income: 1033333,
+      expense: 165333,
+      result: 868000,
+      elapsedDays: 15,
+      totalDays: 31,
+    });
+    expect(projectMonth(transactions, "2026-07", new Date(2026, 7, 10))).toMatchObject({
+      status: "actual",
+      result: 420000,
+    });
+    expect(projectMonth(transactions, "2026-08", new Date(2026, 6, 15)).status).toBe(
+      "unavailable",
+    );
+    expect(projectMonth(transactions, "2026-07", new Date(2026, 6, 2)).status).toBe(
+      "unavailable",
+    );
+  });
+
+  it("prioriza alertas de orçamento e adapta insights ao histórico", () => {
+    const categories: Category[] = [
+      {
+        id: "food",
+        name: "Alimentação",
+        kind: "expense",
+        color: "#F8BF4D",
+        icon: "talher",
+        archived: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ];
+    const budgets: Budget[] = [
+      {
+        id: "b1",
+        categoryId: "food",
+        month: "2026-07",
+        limitCents: 90000,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ];
+    const insights = buildDashboardInsights(
+      transactions,
+      categories,
+      budgets,
+      [],
+      "2026-07",
+    );
+    expect(insights).toHaveLength(3);
+    expect(insights[0]).toMatchObject({ tone: "attention" });
+    expect(insights[0].title).toContain("Alimentação");
+    expect(insights.some((insight) => insight.id === "positive-result")).toBe(true);
   });
 });

@@ -44,10 +44,8 @@ test("novo usuário confirma sessão simulada, vê onboarding e chega ao painel 
   ).toBeVisible();
   await page.getByRole("button", { name: "Simular e-mail confirmado" }).click();
   await completeOnboarding(page);
-  await expect(
-    page.getByRole("heading", { name: "Seu dinheiro, com mais clareza." }),
-  ).toBeVisible();
-  await expect(page.getByText("Nenhuma transação registrada.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bom dia, Lucas!" })).toBeVisible();
+  await expect(page.getByText("Ainda não há despesas neste mês")).toBeVisible();
 });
 
 test("onboarding concluído leva diretamente ao painel", async ({ page }) => {
@@ -56,9 +54,7 @@ test("onboarding concluído leva diretamente ao painel", async ({ page }) => {
     localStorage.setItem("colmeia-review-onboarding", "true");
   });
   await page.goto("/?review=flow");
-  await expect(
-    page.getByRole("heading", { name: "Seu dinheiro, com mais clareza." }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bom dia, Lucas!" })).toBeVisible();
   await expect(page.getByTestId("onboarding-v2")).toHaveCount(0);
 });
 
@@ -73,9 +69,7 @@ test("manter conectado usa armazenamento persistente e sobrevive à recarga", as
   await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
   await completeOnboarding(page);
   await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "Seu dinheiro, com mais clareza." }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bom dia, Lucas!" })).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("colmeia-review-session")),
   ).toBe("confirmed");
@@ -122,7 +116,7 @@ test("capturas do tour não criam dados no painel persistente", async ({ page })
   ).toBeVisible();
   await page.goto("/?review=empty");
   await expect(page.getByTestId("onboarding-v2")).toHaveCount(0);
-  await expect(page.getByText("Nenhuma transação registrada.")).toBeVisible();
+  await expect(page.getByText("Ainda não há despesas neste mês")).toBeVisible();
 });
 
 test("layout de autenticação e painel funciona no viewport do projeto", async ({
@@ -233,13 +227,13 @@ test("relatórios formam um dashboard interativo sem estourar o viewport", async
   await expect(page.getByRole("heading", { name: "Relatórios" })).toBeVisible();
   await expect(page.getByText("Fluxo dos últimos 6 meses")).toBeVisible();
 
-  const months = page.locator(".cashflow-chart button");
+  const months = page.locator(".manager-cashflow__plot > button");
   await expect(months).toHaveCount(6);
   const selectedMonth = await months.nth(4).getAttribute("data-month");
   if (!selectedMonth) throw new Error("mês interativo ausente");
   await months.nth(4).click();
   await expect(
-    page.locator(`.cashflow-chart button[data-month="${selectedMonth}"]`),
+    page.locator(`.manager-cashflow__plot > button[data-month="${selectedMonth}"]`),
   ).toHaveAttribute("aria-pressed", "true");
 
   const layout = await page.evaluate(() => {
@@ -270,6 +264,9 @@ test("cabeçalho e navegação inferior ficam centralizados no celular", async (
   const brand = page.locator(".mobile-brand");
   const buttons = page.locator(".bottom-nav button:visible");
   await expect(buttons).toHaveCount(5);
+  await expect(
+    page.getByRole("button", { name: "Nova transação" }).last(),
+  ).toBeVisible();
   const [menuBox, iconBox, brandBox] = await Promise.all([
     menu.boundingBox(),
     menuIcon.boundingBox(),
@@ -286,21 +283,55 @@ test("cabeçalho e navegação inferior ficam centralizados no celular", async (
   for (const button of await buttons.all()) {
     const box = await button.boundingBox();
     const label = button.locator("span");
-    const labelBox = await label.boundingBox();
-    const labelWidth = await label.evaluate((element) => ({
-      client: element.clientWidth,
-      scroll: element.scrollWidth,
-    }));
-    if (!box || !labelBox) throw new Error("botão móvel ausente");
+    if (!box) throw new Error("botão móvel ausente");
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(viewportWidth + 1);
-    expect(box.width).toBeGreaterThanOrEqual(60);
-    expect(labelBox.x).toBeGreaterThanOrEqual(box.x - 1);
-    expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(box.x + box.width + 1);
-    expect(labelWidth.scroll).toBeLessThanOrEqual(labelWidth.client + 1);
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    if (await label.isVisible()) {
+      const labelBox = await label.boundingBox();
+      const labelWidth = await label.evaluate((element) => ({
+        client: element.clientWidth,
+        scroll: element.scrollWidth,
+      }));
+      if (!labelBox) throw new Error("rótulo móvel ausente");
+      expect(labelBox.x).toBeGreaterThanOrEqual(box.x - 1);
+      expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(box.x + box.width + 1);
+      expect(labelWidth.scroll).toBeLessThanOrEqual(labelWidth.client + 1);
+    }
   }
 
   await expect(page.getByText("Próximo desconto · mensal")).toBeVisible();
+  await page.getByRole("button", { name: "Mais opções" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Mais opções de navegação" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Relatórios" }).last().click();
+  await expect(page.getByRole("heading", { name: "Relatórios" })).toBeVisible();
+});
+
+test("painel gerencial se adapta ao celular sem cortar cartões ou a página", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "validação específica do celular");
+  for (const width of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width, height: 820 });
+    await page.goto("/?review=migrated");
+    await expect(page.getByRole("heading", { name: /Bom dia, Lucas/ })).toBeVisible();
+    await expect(page.locator(".manager-metric")).toHaveCount(4);
+    await expect(page.locator(".manager-cashflow__plot > button")).toHaveCount(6);
+    const layout = await page.evaluate(() => ({
+      bodyOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+      clippedCards: [...document.querySelectorAll<HTMLElement>(".manager-metric")].some(
+        (card) => card.getBoundingClientRect().right > window.innerWidth + 1,
+      ),
+      chartScrollable:
+        document.querySelector<HTMLElement>(".manager-cashflow")!.scrollWidth >
+        document.querySelector<HTMLElement>(".manager-cashflow")!.clientWidth,
+    }));
+    expect(layout.bodyOverflow).toBe(false);
+    expect(layout.clippedCards).toBe(false);
+    expect(layout.chartScrollable).toBe(true);
+  }
 });
 
 test("reordena categorias pelo teclado e mantém a lista configurada", async ({

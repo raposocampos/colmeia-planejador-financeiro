@@ -41,12 +41,17 @@ Textos e controles devem atender WCAG AA. Estados nunca dependem somente de cor.
 - Medida de leitura: 65–75 caracteres.
 - Uma manchete por tela e uma ação principal inequívoca.
 - Superfícies planas e regras finas antes de agrupamentos em cartões.
-- Sidebar escura fixa no desktop; navegação inferior no mobile.
+- Sidebar escura fixa no desktop; no mobile, cinco posições distribuem Visão,
+  Extrato, nova transação em destaque, Orçamentos e Mais. Contas, Metas,
+  Relatórios e Configurações permanecem acessíveis na folha “Mais”.
+- A Visão geral é um painel gerencial: resumo mensal, fluxo de caixa, distribuição
+  de despesas, prioridades, metas, insights contextuais e projeção informativa.
 - Relatórios combinam comparação temporal e distribuição por categoria em painéis
   interativos; gráficos usam mel para saídas e verde para entradas, sempre com
   legenda, foco visível e alternativa tabular.
-- No mobile, marca e menu permanecem geometricamente centralizados e os cinco
-  destinos principais mantêm alvos de toque de pelo menos 44 px.
+- No mobile, a marca permanece geometricamente centralizada entre menu e perfil;
+  os cinco controles inferiores mantêm alvos de toque de pelo menos 44 px e
+  rótulos sem quebra ou sobreposição.
 
 ## Voz
 
